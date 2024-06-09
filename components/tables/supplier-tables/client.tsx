@@ -3,23 +3,27 @@ import { Button } from "@/components/ui/button";
 import { DataTable } from "@/components/ui/data-table";
 import { Heading } from "@/components/ui/heading";
 import { Separator } from "@/components/ui/separator";
-import { User } from "@/constants/data";
 import { Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { columns } from "./columns";
+import { useSupplier } from "@/hooks/useSupplier";
+import { Loading } from "@/components/loading";
+import { useEffect } from "react";
 
-interface ProductsClientProps {
-  data: User[];
-}
-
-export const UserClient: React.FC<ProductsClientProps> = ({ data }) => {
+export const SupplierClient = () => {
   const router = useRouter();
+  const { suppliers, getSuppliers, isLoading } = useSupplier();
+
+  useEffect(() => {
+    getSuppliers();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <>
       <div className="flex items-start justify-between">
         <Heading
-          title={`Fornecedores (${data.length})`}
+          title={`Fornecedores (${suppliers?.length ?? "-"})`}
           description="Gerencie fornecedores (Funcionalidades de cadastro, visualização e remoção.)"
         />
         <Button
@@ -30,7 +34,17 @@ export const UserClient: React.FC<ProductsClientProps> = ({ data }) => {
         </Button>
       </div>
       <Separator />
-      <DataTable searchKey="name" columns={columns} data={data} />
+
+      {isLoading && <Loading />}
+
+      {!isLoading && suppliers !== null && (
+        <DataTable
+          searchKey="name"
+          searchPlaceholder="Buscar por nome..."
+          columns={columns}
+          data={suppliers}
+        />
+      )}
     </>
   );
 };

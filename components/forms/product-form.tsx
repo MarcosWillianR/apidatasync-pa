@@ -52,7 +52,10 @@ export const ProductForm: React.FC<ProductFormProps> = ({ initialData }) => {
   const action = initialData ? "Salvar alterações" : "Criar";
 
   const defaultValues = initialData
-    ? initialData
+    ? {
+        ...initialData,
+        parameters: initialData.parameterType.join(", "),
+      }
     : {
         name: "",
         scope: "",
@@ -88,9 +91,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({ initialData }) => {
       toast({
         variant: "default",
         title: "Sucesso!",
-        description: initialData
-          ? "Fornecedor alterado com sucesso!"
-          : "Fornecedor criado com sucesso!",
+        description: toastMessage,
       });
     } catch (error: any) {
       toast({

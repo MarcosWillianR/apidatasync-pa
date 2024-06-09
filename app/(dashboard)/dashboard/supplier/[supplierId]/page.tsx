@@ -1,9 +1,10 @@
 "use client";
 import React from "react";
 import BreadCrumb from "@/components/breadcrumb";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import { ProductForm } from "@/components/forms/product-form";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { useSupplier } from "@/hooks/useSupplier";
 
 const breadcrumbItems = [
   { title: "Fornecedores", link: "/dashboard/supplier" },
@@ -11,15 +12,14 @@ const breadcrumbItems = [
 ];
 
 export default function Page() {
-  const params = useParams();
-
-  console.log(params);
+  const params = useParams<{ supplierId: string }>();
+  const { getSupplier } = useSupplier();
 
   return (
     <ScrollArea className="h-full">
       <div className="flex-1 space-y-4 p-5">
         <BreadCrumb items={breadcrumbItems} />
-        <ProductForm initialData={null} key={null} />
+        <ProductForm initialData={getSupplier(Number(params.supplierId))} />
       </div>
     </ScrollArea>
   );
