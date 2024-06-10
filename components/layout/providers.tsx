@@ -3,6 +3,7 @@ import React from "react";
 import ThemeProvider from "./ThemeToggle/theme-provider";
 import { SessionProvider, SessionProviderProps } from "next-auth/react";
 import { SupplierProvider } from "@/hooks/useSupplier";
+import { ProductProvider } from "@/hooks/useProduct";
 export default function Providers({
   session,
   children,
@@ -12,9 +13,11 @@ export default function Providers({
 }) {
   return (
     <SupplierProvider>
-      <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-        <SessionProvider session={session}>{children}</SessionProvider>
-      </ThemeProvider>
+      <ProductProvider>
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+          <SessionProvider session={session}>{children}</SessionProvider>
+        </ThemeProvider>
+      </ProductProvider>
     </SupplierProvider>
   );
 }

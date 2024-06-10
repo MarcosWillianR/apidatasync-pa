@@ -1,17 +1,14 @@
 import BreadCrumb from "@/components/breadcrumb";
-import { UserClient } from "@/components/tables/user-tables/client";
-import { users } from "@/constants/data";
+import { ProductClient } from "@/components/tables/product-tables/client";
 
-const breadcrumbItems = [
-  { title: "Fornecedores", link: "/dashboard/supplier" },
-];
+const breadcrumbItems = [{ title: "Produtos", link: "/dashboard/product" }];
 
 export default function page() {
   return (
     <>
       <div className="flex-1 space-y-4  p-4 pt-6 md:p-8">
         <BreadCrumb items={breadcrumbItems} />
-        <UserClient data={users} />
+        <ProductClient />
       </div>
     </>
   );

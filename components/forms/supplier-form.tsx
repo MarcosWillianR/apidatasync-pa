@@ -17,15 +17,19 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { Heading } from "@/components/ui/heading";
 import { useToast } from "../ui/use-toast";
-import { Supplier } from "@/hooks/useSupplier";
 import api from "@/services/api";
 
 const formSchema = z.object({
   name: z
     .string()
     .min(3, { message: "O nome é muito curto, insira no mínimo 5 caracteres" }),
-  supplierIds: z.string(),
-  totalPrice: z.coerce.number(),
+  scope: z.string(),
+  description: z.string().min(10, {
+    message: "A descrição é muito curta, insira no mínimo 10 caracteres",
+  }),
+  parameters: z.string(),
+  requestUrl: z.string().min(10, { message: "Insira uma url válida" }),
+  costPerRequest: z.coerce.number(),
 });
 
 type ProductFormValues = z.infer<typeof formSchema>;
@@ -38,24 +42,27 @@ export const ProductForm: React.FC<ProductFormProps> = ({ initialData }) => {
   const router = useRouter();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
-  const title = initialData ? "Editar produto" : "Criar produto";
+  const title = initialData ? "Editar fornecedor" : "Criar fornecedor";
   const description = initialData
-    ? "Editar um produto."
-    : "Criar um novo produto";
-  const toastMessage = initialData ? "Produto atualizado." : "Produto criado.";
+    ? "Editar um fornecedor."
+    : "Criar um novo fornecedor";
+  const toastMessage = initialData
+    ? "Fornecedor atualizado."
+    : "Fornecedor criado.";
   const action = initialData ? "Salvar alterações" : "Criar";
 
   const defaultValues = initialData
     ? {
         ...initialData,
-        supplierIds: initialData.supplierList
-          .map((supplier: Supplier) => supplier.id)
-          .join(", "),
+        parameters: initialData.parameterType.join(", "),
       }
     : {
         name: "",
-        supplierIds: "",
-        totalPrice: 0,
+        scope: "",
+        description: "",
+        parameters: "",
+        requestUrl: "",
+        costPerRequest: 0,
       };
 
   const form = useForm<ProductFormValues>({
@@ -67,29 +74,22 @@ export const ProductForm: React.FC<ProductFormProps> = ({ initialData }) => {
     try {
       setLoading(true);
 
-      const formattedSupplierIds = data.supplierIds
-        ? data.supplierIds
-            .split(",")
-            .map(Number)
-            .filter((num) => !isNaN(num))
-        : [];
-
       const formattedRequestData = {
         ...data,
-        supplierIds: formattedSupplierIds,
+        parameters: data.parameters ? data.parameters.split(",") : "",
       };
 
       if (initialData) {
-        await api.put("/product", {
+        await api.put("/supplier", {
           id: initialData.id,
           ...formattedRequestData,
         });
       } else {
-        await api.post("/product", formattedRequestData);
+        await api.post("/supplier", formattedRequestData);
       }
 
       router.refresh();
-      router.push(`/dashboard/product`);
+      router.push(`/dashboard/supplier`);
 
       toast({
         variant: "default",
@@ -130,7 +130,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({ initialData }) => {
                   <FormControl>
                     <Input
                       disabled={loading}
-                      placeholder="Nome do produto"
+                      placeholder="Nome do fornecedor"
                       {...field}
                     />
                   </FormControl>
@@ -140,14 +140,14 @@ export const ProductForm: React.FC<ProductFormProps> = ({ initialData }) => {
             />
             <FormField
               control={form.control}
-              name="supplierIds"
+              name="scope"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Ids dos Fornecedores</FormLabel>
+                  <FormLabel>Escopo</FormLabel>
                   <FormControl>
                     <Input
                       disabled={loading}
-                      placeholder="ex: 1, 5, 6..."
+                      placeholder="Insira o escopo"
                       {...field}
                     />
                   </FormControl>
@@ -157,10 +157,61 @@ export const ProductForm: React.FC<ProductFormProps> = ({ initialData }) => {
             />
             <FormField
               control={form.control}
-              name="totalPrice"
+              name="description"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Preço</FormLabel>
+                  <FormLabel>Description</FormLabel>
+                  <FormControl>
+                    <Input
+                      disabled={loading}
+                      placeholder="Descrição do fornecedor"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="parameters"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Parâmetros</FormLabel>
+                  <FormControl>
+                    <Input
+                      disabled={loading}
+                      placeholder="ex: PLACA, CHASSI, ANO..."
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="requestUrl"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Url da requisição</FormLabel>
+                  <FormControl>
+                    <Input
+                      disabled={loading}
+                      placeholder="Url da requisição do fornecedor"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="costPerRequest"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Custo por requisição</FormLabel>
                   <FormControl>
                     <Input type="number" disabled={loading} {...field} />
                   </FormControl>
@@ -169,7 +220,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({ initialData }) => {
               )}
             />
           </div>
-          <Button isLoading={loading} className="ml-auto" type="submit">
+          <Button disabled={loading} className="ml-auto" type="submit">
             {action}
           </Button>
         </form>

@@ -2,7 +2,7 @@
 import React from "react";
 import BreadCrumb from "@/components/breadcrumb";
 import { useParams } from "next/navigation";
-import { ProductForm } from "@/components/forms/product-form";
+import { ProductForm } from "@/components/forms/supplier-form";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useSupplier } from "@/hooks/useSupplier";
 
