@@ -1,7 +1,9 @@
 "use client";
 import * as z from "zod";
+import { Plus, Trash } from "lucide-react";
 import { useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { v4 as uuidv4 } from "uuid";
 import { useForm } from "react-hook-form";
 import { useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
@@ -27,7 +29,6 @@ const formSchema = z.object({
   description: z.string().min(10, {
     message: "A descrição é muito curta, insira no mínimo 10 caracteres",
   }),
-  parameters: z.string(),
   requestUrl: z.string().min(10, { message: "Insira uma url válida" }),
   costPerRequest: z.coerce.number(),
 });
@@ -38,10 +39,16 @@ interface ProductFormProps {
   initialData: any | null;
 }
 
+interface Parameter {
+  id: string;
+  value: string;
+}
+
 export const ProductForm: React.FC<ProductFormProps> = ({ initialData }) => {
   const router = useRouter();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
+  const [parameters, setParameters] = useState<Parameter[]>([]);
   const title = initialData ? "Editar fornecedor" : "Criar fornecedor";
   const description = initialData
     ? "Editar um fornecedor."
@@ -52,15 +59,11 @@ export const ProductForm: React.FC<ProductFormProps> = ({ initialData }) => {
   const action = initialData ? "Salvar alterações" : "Criar";
 
   const defaultValues = initialData
-    ? {
-        ...initialData,
-        parameters: initialData.parameterType.join(", "),
-      }
+    ? initialData
     : {
         name: "",
         scope: "",
         description: "",
-        parameters: "",
         requestUrl: "",
         costPerRequest: 0,
       };
@@ -70,13 +73,41 @@ export const ProductForm: React.FC<ProductFormProps> = ({ initialData }) => {
     defaultValues,
   });
 
+  function handleAddNewParameter() {
+    setParameters((currentParameters) => {
+      const newParameter = { id: uuidv4(), value: "" };
+      return [newParameter, ...currentParameters];
+    });
+  }
+
+  function handleUpdateParameterValue(value: string, id: string) {
+    setParameters((currentParameters) =>
+      currentParameters.map((cp) => {
+        if (cp.id === id) {
+          return {
+            ...cp,
+            value,
+          };
+        }
+
+        return cp;
+      }),
+    );
+  }
+
+  function handleRemoveParameter(id: string) {
+    setParameters((currentParameters) =>
+      currentParameters.filter((cp) => cp.id !== id),
+    );
+  }
+
   const onSubmit = async (data: ProductFormValues) => {
     try {
       setLoading(true);
 
       const formattedRequestData = {
         ...data,
-        parameters: data.parameters ? data.parameters.split(",") : "",
+        parameters: parameters.map((p) => p.value).filter((p) => p),
       };
 
       if (initialData) {
@@ -174,23 +205,6 @@ export const ProductForm: React.FC<ProductFormProps> = ({ initialData }) => {
             />
             <FormField
               control={form.control}
-              name="parameters"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Parâmetros</FormLabel>
-                  <FormControl>
-                    <Input
-                      disabled={loading}
-                      placeholder="ex: PLACA, CHASSI, ANO..."
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
               name="requestUrl"
               render={({ field }) => (
                 <FormItem>
@@ -220,6 +234,40 @@ export const ProductForm: React.FC<ProductFormProps> = ({ initialData }) => {
               )}
             />
           </div>
+
+          <Separator />
+
+          <div className="flex gap-3 items-center justify-between">
+            <span className="text-lg">Parâmetros</span>
+
+            <Button type="button" onClick={handleAddNewParameter}>
+              <Plus className="h-4 w-4 mr-2" /> Novo parâmetro
+            </Button>
+          </div>
+
+          {parameters.map((parameter) => (
+            <div key={parameter.id} className="flex items-center gap-3 mb-4">
+              <Input
+                value={parameter.value}
+                placeholder="Nome do parâmetro"
+                onChange={(e) =>
+                  handleUpdateParameterValue(e.target.value, parameter.id)
+                }
+              />
+
+              <Button
+                type="button"
+                variant="destructive"
+                onClick={() => handleRemoveParameter(parameter.id)}
+              >
+                <Trash className="h-4 w-4 mr-2" />
+                Remover
+              </Button>
+            </div>
+          ))}
+
+          <Separator />
+
           <Button disabled={loading} className="ml-auto" type="submit">
             {action}
           </Button>
