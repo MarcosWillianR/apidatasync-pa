@@ -19,6 +19,7 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { Heading } from "@/components/ui/heading";
 import { useToast } from "../ui/use-toast";
+import { Supplier } from "@/hooks/useSupplier";
 import api from "@/services/api";
 
 const formSchema = z.object({
@@ -36,7 +37,7 @@ const formSchema = z.object({
 type ProductFormValues = z.infer<typeof formSchema>;
 
 interface ProductFormProps {
-  initialData: any | null;
+  initialData: Supplier | null;
 }
 
 interface Parameter {
@@ -48,7 +49,16 @@ export const ProductForm: React.FC<ProductFormProps> = ({ initialData }) => {
   const router = useRouter();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
-  const [parameters, setParameters] = useState<Parameter[]>([]);
+  const [parameters, setParameters] = useState<Parameter[]>(() => {
+    if (initialData !== null) {
+      return initialData.parameterType.map((pt) => ({
+        id: uuidv4(),
+        value: pt,
+      }));
+    }
+
+    return [];
+  });
   const title = initialData ? "Editar fornecedor" : "Criar fornecedor";
   const description = initialData
     ? "Editar um fornecedor."
@@ -57,6 +67,8 @@ export const ProductForm: React.FC<ProductFormProps> = ({ initialData }) => {
     ? "Fornecedor atualizado."
     : "Fornecedor criado.";
   const action = initialData ? "Salvar alterações" : "Criar";
+
+  console.log(initialData);
 
   const defaultValues = initialData
     ? initialData
