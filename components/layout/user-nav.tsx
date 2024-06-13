@@ -12,8 +12,10 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { signOut, useSession } from "next-auth/react";
+
 export function UserNav() {
   const { data: session } = useSession();
+
   if (session) {
     return (
       <DropdownMenu>
@@ -22,9 +24,9 @@ export function UserNav() {
             <Avatar className="h-8 w-8">
               <AvatarImage
                 src={session.user?.image ?? ""}
-                alt={session.user?.name ?? ""}
+                alt={session.user?.firstName ?? ""}
               />
-              <AvatarFallback>{session.user?.name?.[0]}</AvatarFallback>
+              <AvatarFallback>{session.user?.firstName?.[0]}</AvatarFallback>
             </Avatar>
           </Button>
         </DropdownMenuTrigger>
@@ -32,7 +34,7 @@ export function UserNav() {
           <DropdownMenuLabel className="font-normal">
             <div className="flex flex-col space-y-1">
               <p className="text-sm font-medium leading-none">
-                {session.user?.name}
+                {`${session.user?.firstName} ${session.user.lastName}`}
               </p>
               <p className="text-xs leading-none text-muted-foreground">
                 {session.user?.email}

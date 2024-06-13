@@ -13,6 +13,7 @@ interface SidebarProps extends React.HTMLAttributes<HTMLDivElement> {
 
 export function MobileSidebar({ className }: SidebarProps) {
   const [open, setOpen] = useState(false);
+
   return (
     <>
       <Sheet open={open} onOpenChange={setOpen}>

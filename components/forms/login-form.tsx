@@ -11,7 +11,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { signIn } from "next-auth/react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
+import { useToast } from "../ui/use-toast";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 
@@ -23,6 +24,8 @@ const formSchema = z.object({
 type UserFormValue = z.infer<typeof formSchema>;
 
 export default function LoginForm() {
+  const router = useRouter();
+  const { toast } = useToast();
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl");
   const form = useForm<UserFormValue>({
@@ -34,11 +37,22 @@ export default function LoginForm() {
   });
 
   const onSubmit = async (data: UserFormValue) => {
-    signIn("credentials", {
+    const result = await signIn("credentials", {
+      redirect: false,
       email: data.email,
       password: data.password,
       callbackUrl: callbackUrl ?? "/dashboard",
     });
+
+    if (result?.error) {
+      toast({
+        variant: "destructive",
+        title: "Ops, problema à visa!",
+        description: result?.error,
+      });
+    } else {
+      router.push("/dashboard");
+    }
   };
 
   return (
