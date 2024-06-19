@@ -30,8 +30,7 @@ export const authOptions: NextAuthOptions = {
         const response = await res.json();
 
         if (res.ok && response) {
-          api.defaults.headers.Authorization = `Bearer ${response.token}`;
-          return response.user;
+          return { ...response.user, token: response.token };
         } else {
           throw new Error(
             response.message || "Houve um problema ao tentar realizar o login.",
@@ -56,6 +55,7 @@ export const authOptions: NextAuthOptions = {
         token.phone = user.phone;
         token.credits = user.credits;
         token.asaasCustomerId = user.asaasCustomerId;
+        token.token = user.token;
       }
       return token;
     },
@@ -70,6 +70,7 @@ export const authOptions: NextAuthOptions = {
       session.user.phone = token.phone;
       session.user.credits = token.credits;
       session.user.asaasCustomerId = token.asaasCustomerId;
+      session.user.token = token.token;
       return session;
     },
   },

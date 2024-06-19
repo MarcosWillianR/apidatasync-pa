@@ -1,6 +1,6 @@
 "use client";
 import * as z from "zod";
-import { Plus, Trash } from "lucide-react";
+import { Plus } from "lucide-react";
 import { useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { v4 as uuidv4 } from "uuid";
@@ -16,6 +16,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { Parameter, SupplierParameterList } from "./supplier-parameter-list";
 import { Separator } from "@/components/ui/separator";
 import { Heading } from "@/components/ui/heading";
 import { useToast } from "../ui/use-toast";
@@ -30,6 +31,9 @@ const formSchema = z.object({
   description: z.string().min(10, {
     message: "A descrição é muito curta, insira no mínimo 10 caracteres",
   }),
+  timeout: z.coerce.number(),
+  errorCondition: z.string(),
+  method: z.string(),
   requestUrl: z.string().min(10, { message: "Insira uma url válida" }),
   costPerRequest: z.coerce.number(),
 });
@@ -38,11 +42,6 @@ type ProductFormValues = z.infer<typeof formSchema>;
 
 interface ProductFormProps {
   initialData: Supplier | null;
-}
-
-interface Parameter {
-  id: string;
-  value: string;
 }
 
 export const ProductForm: React.FC<ProductFormProps> = ({ initialData }) => {
@@ -59,6 +58,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({ initialData }) => {
 
     return [];
   });
+
   const title = initialData ? "Editar fornecedor" : "Criar fornecedor";
   const description = initialData
     ? "Editar um fornecedor."
@@ -68,7 +68,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({ initialData }) => {
     : "Fornecedor criado.";
   const action = initialData ? "Salvar alterações" : "Criar";
 
-  console.log(initialData);
+  // console.log(initialData);
 
   const defaultValues = initialData
     ? initialData
@@ -76,6 +76,9 @@ export const ProductForm: React.FC<ProductFormProps> = ({ initialData }) => {
         name: "",
         scope: "",
         description: "",
+        timeout: 0,
+        errorCondition: "",
+        method: "",
         requestUrl: "",
         costPerRequest: 0,
       };
@@ -163,6 +166,10 @@ export const ProductForm: React.FC<ProductFormProps> = ({ initialData }) => {
           onSubmit={form.handleSubmit(onSubmit)}
           className="w-full space-y-8"
         >
+          <div className="flex gap-3 items-center justify-between">
+            <span className="text-lg">Dados iniciais</span>
+          </div>
+
           <div className="gap-8 md:grid md:grid-cols-3">
             <FormField
               control={form.control}
@@ -215,6 +222,45 @@ export const ProductForm: React.FC<ProductFormProps> = ({ initialData }) => {
                 </FormItem>
               )}
             />
+
+            <FormField
+              control={form.control}
+              name="costPerRequest"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Custo por requisição</FormLabel>
+                  <FormControl>
+                    <Input type="number" disabled={loading} {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+
+          <div className="flex gap-3 items-center justify-between">
+            <span className="text-lg">Dados da Requisição</span>
+          </div>
+
+          <div className="gap-8 md:grid md:grid-cols-3">
+            <FormField
+              control={form.control}
+              name="method"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Método</FormLabel>
+                  <FormControl>
+                    <Input
+                      disabled={loading}
+                      placeholder="GET, POST, PUT, DELETE"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
             <FormField
               control={form.control}
               name="requestUrl"
@@ -232,53 +278,14 @@ export const ProductForm: React.FC<ProductFormProps> = ({ initialData }) => {
                 </FormItem>
               )}
             />
-            <FormField
-              control={form.control}
-              name="costPerRequest"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Custo por requisição</FormLabel>
-                  <FormControl>
-                    <Input type="number" disabled={loading} {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
           </div>
 
-          <Separator />
-
-          <div className="flex gap-3 items-center justify-between">
-            <span className="text-lg">Parâmetros</span>
-
-            <Button type="button" onClick={handleAddNewParameter}>
-              <Plus className="h-4 w-4 mr-2" /> Novo parâmetro
-            </Button>
-          </div>
-
-          {parameters.map((parameter) => (
-            <div key={parameter.id} className="flex items-center gap-3 mb-4">
-              <Input
-                value={parameter.value}
-                placeholder="Nome do parâmetro"
-                onChange={(e) =>
-                  handleUpdateParameterValue(e.target.value, parameter.id)
-                }
-              />
-
-              <Button
-                type="button"
-                variant="destructive"
-                onClick={() => handleRemoveParameter(parameter.id)}
-              >
-                <Trash className="h-4 w-4 mr-2" />
-                Remover
-              </Button>
-            </div>
-          ))}
-
-          <Separator />
+          <SupplierParameterList
+            parameters={parameters}
+            onChange={handleUpdateParameterValue}
+            onRemove={handleRemoveParameter}
+            onAddNew={handleAddNewParameter}
+          />
 
           <Button disabled={loading} className="ml-auto" type="submit">
             {action}

@@ -2,6 +2,11 @@ import React, { useCallback, useState, createContext, useContext } from "react";
 
 import api from "@/services/api";
 import { useToast } from "@/components/ui/use-toast";
+import { getSession } from "next-auth/react";
+
+interface StandardItem {
+  [key: string]: string;
+}
 
 export interface Supplier {
   id: number;
@@ -11,12 +16,18 @@ export interface Supplier {
   requestUrl: string;
   costPerRequest: number;
   parameterType: string[];
+  errorCondition: string;
+  method: string;
+  postBody: string | null;
+  postHeader: object | null;
+  standardResponse: StandardItem[];
+  timeout: number;
 }
 
 interface SupplierContextProps {
   suppliers: Supplier[] | null;
   getSuppliers: () => Promise<void>;
-  getSupplier: (id: number) => Supplier | null;
+  getSupplier: (id: number) => Promise<Supplier | null>;
   isLoading: boolean;
   deleteSupplier: (id: number) => Promise<void>;
   isDeletingSupplier: boolean;
@@ -28,16 +39,26 @@ const SupplierContext = createContext<SupplierContextProps>(
 
 function SupplierProvider({ children }: { children: React.ReactNode }) {
   const [suppliers, setSuppliers] = useState<Supplier[] | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [isDeletingSupplier, setIsDeletingSupplier] = useState(false);
   const { toast } = useToast();
 
   const getSuppliers = useCallback(async () => {
     try {
       setIsLoading(true);
-      const { data } = await api.get("supplier");
+
+      const session = await getSession();
+      const { data } = await api.get("supplier", {
+        headers: {
+          Authorization: `Bearer ${session?.user.token}`,
+        },
+      });
+
       setSuppliers(data.content);
     } catch (error: any) {
+      console.log("ERROR:");
+      console.log(error.response);
+
       toast({
         variant: "destructive",
         title: "Ops, houve um problema.",
@@ -49,11 +70,32 @@ function SupplierProvider({ children }: { children: React.ReactNode }) {
   }, [toast]);
 
   const getSupplier = useCallback(
-    (id: number) => {
-      const supplier = suppliers?.find((supplier) => supplier.id === id);
-      return supplier || null;
+    async (id: number) => {
+      try {
+        setIsLoading(true);
+
+        const session = await getSession();
+        const { data } = await api.get(`supplier/${id}`, {
+          headers: {
+            Authorization: `Bearer ${session?.user.token}`,
+          },
+        });
+
+        return data || null;
+      } catch (error: any) {
+        console.log("ERROR:");
+        console.log(error.response);
+
+        toast({
+          variant: "destructive",
+          title: "Ops, houve um problema.",
+          description: error,
+        });
+      } finally {
+        setIsLoading(false);
+      }
     },
-    [suppliers],
+    [toast],
   );
 
   const deleteSupplier = useCallback(
@@ -72,6 +114,9 @@ function SupplierProvider({ children }: { children: React.ReactNode }) {
           description: "Fornecedor removido com sucesso.",
         });
       } catch (error: any) {
+        console.log("ERROR:");
+        console.log(error.response);
+
         toast({
           variant: "destructive",
           title: "Ops, houve um problema.",

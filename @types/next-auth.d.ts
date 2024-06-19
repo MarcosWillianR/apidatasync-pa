@@ -13,6 +13,7 @@ declare module "next-auth" {
     birth_day: string;
     cpf: string;
     asaasCustomerId: string;
+    token: string;
   }
 
   interface Session {
@@ -34,5 +35,6 @@ declare module "next-auth/jwt" {
     birth_day: string;
     cpf: string;
     asaasCustomerId: string;
+    token: string;
   }
 }
