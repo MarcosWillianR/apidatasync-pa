@@ -1,6 +1,6 @@
 export function Loading() {
   return (
-    <div className="text-center">
+    <div className="text-center items-center justify-center flex h-screen">
       <div role="status">
         <svg
           aria-hidden="true"

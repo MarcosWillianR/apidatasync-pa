@@ -4,10 +4,6 @@ import api from "@/services/api";
 import { useToast } from "@/components/ui/use-toast";
 import { getSession } from "next-auth/react";
 
-interface StandardItem {
-  [key: string]: string;
-}
-
 export interface Supplier {
   id: number;
   name: string;
@@ -18,9 +14,9 @@ export interface Supplier {
   parameterType: string[];
   errorCondition: string;
   method: string;
-  postBody: string | null;
-  postHeader: object | null;
-  standardResponse: StandardItem[];
+  postBody: string;
+  postHeader: string;
+  standardResponse: string;
   timeout: number;
 }
 
@@ -33,9 +29,7 @@ interface SupplierContextProps {
   isDeletingSupplier: boolean;
 }
 
-const SupplierContext = createContext<SupplierContextProps>(
-  {} as SupplierContextProps,
-);
+const SupplierContext = createContext<SupplierContextProps>({} as SupplierContextProps);
 
 function SupplierProvider({ children }: { children: React.ReactNode }) {
   const [suppliers, setSuppliers] = useState<Supplier[] | null>(null);
@@ -89,8 +83,10 @@ function SupplierProvider({ children }: { children: React.ReactNode }) {
         toast({
           variant: "destructive",
           title: "Ops, houve um problema.",
-          description: error,
+          description: error.response.data.message,
         });
+
+        return null;
       } finally {
         setIsLoading(false);
       }
@@ -105,8 +101,7 @@ function SupplierProvider({ children }: { children: React.ReactNode }) {
         await api.delete(`supplier/${id}`);
 
         setSuppliers(
-          (currentSuppliers) =>
-            currentSuppliers?.filter((supplier) => supplier.id !== id) || null,
+          (currentSuppliers) => currentSuppliers?.filter((supplier) => supplier.id !== id) || null,
         );
 
         toast({

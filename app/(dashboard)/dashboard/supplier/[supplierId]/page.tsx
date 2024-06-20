@@ -4,6 +4,7 @@ import BreadCrumb from "@/components/breadcrumb";
 import { useParams } from "next/navigation";
 import { ProductForm } from "@/components/forms/supplier-form";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Loading } from "@/components/loading";
 import { Supplier, useSupplier } from "@/hooks/useSupplier";
 
 const breadcrumbItems = [
@@ -30,11 +31,7 @@ export default function Page() {
       <div className="flex-1 space-y-4 p-5">
         <BreadCrumb items={breadcrumbItems} />
 
-        {isLoading ? (
-          <div>Carregando...</div>
-        ) : (
-          <ProductForm initialData={supplier} />
-        )}
+        {isLoading ? <Loading /> : <ProductForm initialData={supplier} />}
       </div>
     </ScrollArea>
   );

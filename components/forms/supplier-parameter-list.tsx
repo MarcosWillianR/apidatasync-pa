@@ -41,18 +41,12 @@ export function SupplierParameterList({
             onChange={(e) => onChange(e.target.value, parameter.id)}
           />
 
-          <Button
-            type="button"
-            variant="destructive"
-            onClick={() => onRemove(parameter.id)}
-          >
+          <Button type="button" variant="destructive" onClick={() => onRemove(parameter.id)}>
             <Trash className="h-4 w-4 mr-2" />
             Remover
           </Button>
         </div>
       ))}
-
-      <Separator />
     </>
   );
 }
