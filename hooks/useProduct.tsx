@@ -1,6 +1,6 @@
 import React, { useCallback, useState, createContext, useContext } from "react";
 
-import api from "@/services/api";
+import useAxiosAuth from "@/services/hooks/useAxiosAuth";
 import { useToast } from "@/components/ui/use-toast";
 import { Supplier } from "./useSupplier";
 
@@ -21,22 +21,24 @@ interface ProductContextProps {
   isDeletingProduct: boolean;
 }
 
-const ProductContext = createContext<ProductContextProps>(
-  {} as ProductContextProps,
-);
+const ProductContext = createContext<ProductContextProps>({} as ProductContextProps);
 
 function ProductProvider({ children }: { children: React.ReactNode }) {
   const [products, setProducts] = useState<Product[] | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isDeletingProduct, setIsDeletingProduct] = useState(false);
+
   const { toast } = useToast();
+  const axiosAuth = useAxiosAuth();
 
   const getProducts = useCallback(async () => {
     try {
       setIsLoading(true);
-      const { data } = await api.get("product");
+      const { data } = await axiosAuth.get("product");
       setProducts(data.content);
     } catch (error: any) {
+      console.log(`ERROR STATUS: `, error.status);
+
       toast({
         variant: "destructive",
         title: "Ops, houve um problema.",
@@ -45,7 +47,7 @@ function ProductProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setIsLoading(false);
     }
-  }, [toast]);
+  }, [axiosAuth, toast]);
 
   const getProduct = useCallback(
     (id: number) => {
@@ -59,11 +61,10 @@ function ProductProvider({ children }: { children: React.ReactNode }) {
     async (id: number) => {
       try {
         setIsDeletingProduct(true);
-        await api.delete(`product/${id}`);
+        await axiosAuth.delete(`product/${id}`);
 
         setProducts(
-          (currentProducts) =>
-            currentProducts?.filter((product) => product.id !== id) || null,
+          (currentProducts) => currentProducts?.filter((product) => product.id !== id) || null,
         );
 
         toast({
@@ -71,6 +72,8 @@ function ProductProvider({ children }: { children: React.ReactNode }) {
           description: "Produto removido com sucesso.",
         });
       } catch (error: any) {
+        console.log(`ERROR STATUS: `, error.status);
+
         toast({
           variant: "destructive",
           title: "Ops, houve um problema.",
@@ -80,7 +83,7 @@ function ProductProvider({ children }: { children: React.ReactNode }) {
         setIsDeletingProduct(false);
       }
     },
-    [toast],
+    [axiosAuth, toast],
   );
 
   return (

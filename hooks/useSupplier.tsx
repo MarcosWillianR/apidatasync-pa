@@ -1,6 +1,6 @@
 import React, { useCallback, useState, createContext, useContext } from "react";
 
-import api from "@/services/api";
+import useAxiosAuth from "@/services/hooks/useAxiosAuth";
 import { useToast } from "@/components/ui/use-toast";
 import { getSession } from "next-auth/react";
 
@@ -35,33 +35,26 @@ function SupplierProvider({ children }: { children: React.ReactNode }) {
   const [suppliers, setSuppliers] = useState<Supplier[] | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isDeletingSupplier, setIsDeletingSupplier] = useState(false);
+
   const { toast } = useToast();
+  const axiosAuth = useAxiosAuth();
 
   const getSuppliers = useCallback(async () => {
     try {
       setIsLoading(true);
 
       const session = await getSession();
-      const { data } = await api.get("supplier", {
+      const { data } = await axiosAuth.get("supplier", {
         headers: {
           Authorization: `Bearer ${session?.user.token}`,
         },
       });
 
       setSuppliers(data.content);
-    } catch (error: any) {
-      console.log("ERROR:");
-      console.log(error.response);
-
-      toast({
-        variant: "destructive",
-        title: "Ops, houve um problema.",
-        description: error,
-      });
     } finally {
       setIsLoading(false);
     }
-  }, [toast]);
+  }, [axiosAuth]);
 
   const getSupplier = useCallback(
     async (id: number) => {
@@ -69,36 +62,25 @@ function SupplierProvider({ children }: { children: React.ReactNode }) {
         setIsLoading(true);
 
         const session = await getSession();
-        const { data } = await api.get(`supplier/${id}`, {
+        const { data } = await axiosAuth.get(`supplier/${id}`, {
           headers: {
             Authorization: `Bearer ${session?.user.token}`,
           },
         });
 
         return data || null;
-      } catch (error: any) {
-        console.log("ERROR:");
-        console.log(error.response);
-
-        toast({
-          variant: "destructive",
-          title: "Ops, houve um problema.",
-          description: error.response.data.message,
-        });
-
-        return null;
       } finally {
         setIsLoading(false);
       }
     },
-    [toast],
+    [axiosAuth],
   );
 
   const deleteSupplier = useCallback(
     async (id: number) => {
       try {
         setIsDeletingSupplier(true);
-        await api.delete(`supplier/${id}`);
+        await axiosAuth.delete(`supplier/${id}`);
 
         setSuppliers(
           (currentSuppliers) => currentSuppliers?.filter((supplier) => supplier.id !== id) || null,
@@ -108,20 +90,11 @@ function SupplierProvider({ children }: { children: React.ReactNode }) {
           title: "Sucesso!",
           description: "Fornecedor removido com sucesso.",
         });
-      } catch (error: any) {
-        console.log("ERROR:");
-        console.log(error.response);
-
-        toast({
-          variant: "destructive",
-          title: "Ops, houve um problema.",
-          description: error,
-        });
       } finally {
         setIsDeletingSupplier(false);
       }
     },
-    [toast],
+    [axiosAuth, toast],
   );
 
   return (

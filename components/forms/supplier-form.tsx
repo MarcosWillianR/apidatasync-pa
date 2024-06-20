@@ -1,35 +1,29 @@
 "use client";
 import * as z from "zod";
-import { Plus } from "lucide-react";
-import { useState } from "react";
+import { Dispatch, SetStateAction, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { v4 as uuidv4 } from "uuid";
 import { useForm } from "react-hook-form";
 import { useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Parameter, SupplierParameterList } from "./supplier-parameter-list";
 import { HeaderItem, SupplierHeaderList } from "./supplier-header-list";
 import { RequestBodyItem, SupplierRequestBodyList } from "./supplier-request-body-list";
-import {
-  StandardResponseItem,
-  SupplierStandardResponseList,
-} from "./supplier-standard-response-list";
+
+import { KeyValueItem, SupplierKeyValueList } from "./supplier-key-value-list";
+
+import { StandardResponseItem, SupplierStandardResponseList } from "./supplier-standard-response-list";
 import { Separator } from "@/components/ui/separator";
 import { Heading } from "@/components/ui/heading";
 import { useToast } from "../ui/use-toast";
 import { Supplier } from "@/hooks/useSupplier";
-import api from "@/services/api";
+import useAxiosAuth from "@/services/hooks/useAxiosAuth";
 import { convertArrayToJson, convertObjectToXML } from "@/lib/utils";
 import { useSession } from "next-auth/react";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "../ui/accordion";
 
 const formSchema = z.object({
   name: z.string().min(3, { message: "O nome é muito curto, insira no mínimo 5 caracteres" }),
@@ -39,7 +33,6 @@ const formSchema = z.object({
   }),
   timeout: z.coerce.number(),
   errorCondition: z.string(),
-  method: z.string(),
   requestUrl: z.string().min(10, { message: "Insira uma url válida" }),
   costPerRequest: z.coerce.number(),
 });
@@ -72,11 +65,14 @@ interface RequestDataDTO {
 export const ProductForm: React.FC<ProductFormProps> = ({ initialData }) => {
   const router = useRouter();
   const { toast } = useToast();
+  const axiosAuth = useAxiosAuth();
   const session = useSession();
   const [loading, setLoading] = useState(false);
-  const [headers, setHeaders] = useState<HeaderItem[]>([]);
-  const [standardResponses, setStandardResponses] = useState<StandardResponseItem[]>([]);
-  const [requestBodies, setRequestBodies] = useState<RequestBodyItem[]>([]);
+  const [currentAccordionVisible, setCurrentAccordionVisible] = useState("");
+  const [currentMethod, setCurrentMethod] = useState("GET");
+  const [headers, setHeaders] = useState<KeyValueItem[]>([]);
+  const [standardResponses, setStandardResponses] = useState<KeyValueItem[]>([]);
+  const [requestBodies, setRequestBodies] = useState<KeyValueItem[]>([]);
   const [currentBodyFormatter, setCurrentBodyFormatter] = useState("json");
   const [parameters, setParameters] = useState<Parameter[]>(() => {
     if (initialData !== null) {
@@ -102,7 +98,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({ initialData }) => {
         description: "",
         timeout: 0,
         errorCondition: "",
-        method: "",
+        // method: "",
         requestUrl: "",
         // postBody: "",
         // postHeader: "",
@@ -141,38 +137,40 @@ export const ProductForm: React.FC<ProductFormProps> = ({ initialData }) => {
     setParameters((currentParameters) => currentParameters.filter((cp) => cp.id !== id));
   }
 
-  function handleAddNewHeader() {
-    setHeaders((currentHeaders) => {
-      const newHeader = {
+  function handleAddNewKeyValue(setList: Dispatch<SetStateAction<KeyValueItem[]>>) {
+    setList((currentList) => {
+      const newItem = {
         id: uuidv4(),
-        header: "",
+        key: "",
         value: "",
-        enabled: true,
       };
-      return [newHeader, ...currentHeaders];
+      return [newItem, ...currentList];
     });
   }
 
-  function handleRemoveHeader(id: string) {
-    setHeaders((currentHeaders) =>
-      currentHeaders.filter((currentHeader) => currentHeader.id !== id),
-    );
+  function handleRemoveKeyValue(id: string, setList: Dispatch<SetStateAction<KeyValueItem[]>>) {
+    setList((currentList) => currentList.filter((currentItem) => currentItem.id !== id));
   }
 
-  function handleUpdateHeader(type: "header" | "value", value: string, id: string) {
-    setHeaders((currentHeaders) =>
-      currentHeaders.map((currentHeader) => {
-        if (currentHeader.id === id) {
-          const updatedHeader = {
-            ...currentHeader,
-            ...(type === "header" && { header: value }),
+  function handleUpdateKeyValue(
+    type: "key" | "value",
+    value: string,
+    id: string,
+    setList: Dispatch<SetStateAction<KeyValueItem[]>>,
+  ) {
+    setList((currentList) =>
+      currentList.map((currentItem) => {
+        if (currentItem.id === id) {
+          const updatedItem = {
+            ...currentItem,
+            ...(type === "key" && { key: value }),
             ...(type === "value" && { value }),
           };
 
-          return updatedHeader;
+          return updatedItem;
         }
 
-        return currentHeader;
+        return currentItem;
       }),
     );
   }
@@ -192,97 +190,18 @@ export const ProductForm: React.FC<ProductFormProps> = ({ initialData }) => {
   //   );
   // }
 
-  function handleAddNewStandardResponse() {
-    setStandardResponses((currentStandardResponses) => {
-      const newStandardResponse = {
-        id: uuidv4(),
-        key: "",
-        value: "",
-      };
-      return [newStandardResponse, ...currentStandardResponses];
-    });
-  }
-
-  function handleRemoveStandardResponse(id: string) {
-    setStandardResponses((currentStandardResponses) =>
-      currentStandardResponses.filter(
-        (currentStandardResponse) => currentStandardResponse.id !== id,
-      ),
-    );
-  }
-
-  function handleUpdateStandardResponse(type: "key" | "value", value: string, id: string) {
-    setStandardResponses((currentStandardResponses) =>
-      currentStandardResponses.map((standardResponse) => {
-        if (standardResponse.id === id) {
-          const updatedStandardResponse = {
-            ...standardResponse,
-            ...(type === "key" && { key: value }),
-            ...(type === "value" && { value }),
-          };
-
-          return updatedStandardResponse;
-        }
-
-        return standardResponse;
-      }),
-    );
-  }
-
-  function handleAddNewRequestBody() {
-    setRequestBodies((currentRequestBodies) => {
-      const newRequestBody = {
-        id: uuidv4(),
-        key: "",
-        value: "",
-      };
-      return [newRequestBody, ...currentRequestBodies];
-    });
-  }
-
-  function handleRemoveRequestBody(id: string) {
-    setRequestBodies((currentRequestBodies) =>
-      currentRequestBodies.filter((currentRequestBody) => currentRequestBody.id !== id),
-    );
-  }
-
-  function handleUpdateRequestBody(type: "key" | "value", value: string, id: string) {
-    setRequestBodies((currentRequestBodies) =>
-      currentRequestBodies.map((requestBody) => {
-        if (requestBody.id === id) {
-          const updatedRequestBody = {
-            ...requestBody,
-            ...(type === "key" && { key: value }),
-            ...(type === "value" && { value }),
-          };
-
-          return updatedRequestBody;
-        }
-
-        return requestBody;
-      }),
-    );
-  }
-
   const onSubmit = async (data: ProductFormValues) => {
     try {
       const formattedRequestData: RequestDataDTO = {
         ...data,
         parameters: parameters.map((p) => p.value).filter((p) => p),
-        postHeader:
-          headers.length > 0
-            ? convertArrayToJson(headers.map(({ header, value }) => ({ key: header, value })))
-            : null,
-        standardResponse:
-          standardResponses.length > 0
-            ? convertArrayToJson(standardResponses.map(({ key, value }) => ({ key, value })))
-            : null,
+        postHeader: headers.length > 0 ? convertArrayToJson(headers) : null,
+        standardResponse: standardResponses.length > 0 ? convertArrayToJson(standardResponses) : null,
         postBody: "",
+        method: currentMethod,
       };
 
-      const requestBodiesFormatted = convertArrayToJson(
-        requestBodies.map(({ key, value }) => ({ key, value })),
-      );
+      const requestBodiesFormatted = convertArrayToJson(requestBodies);
 
       if (currentBodyFormatter === "json") {
         formattedRequestData.postBody = JSON.stringify(requestBodiesFormatted);
@@ -292,39 +211,27 @@ export const ProductForm: React.FC<ProductFormProps> = ({ initialData }) => {
         formattedRequestData.postBody = convertObjectToXML(requestBodiesFormatted);
       }
 
-      setLoading(true);
+      console.log(formattedRequestData);
 
-      if (initialData) {
-        await api.put(
-          "/supplier",
-          {
-            id: initialData.id,
-            ...formattedRequestData,
-          },
-          { headers: { Authorization: `Bearer ${session.data?.user.token}` } },
-        );
-      } else {
-        await api.post("/supplier", formattedRequestData, {
-          headers: { Authorization: `Bearer ${session.data?.user.token}` },
-        });
-      }
+      // setLoading(true);
 
-      router.refresh();
-      router.push(`/dashboard/supplier`);
+      // if (initialData) {
+      //   await axiosAuth.put("/supplier", {
+      //     id: initialData.id,
+      //     ...formattedRequestData,
+      //   });
+      // } else {
+      //   await axiosAuth.post("/supplier", formattedRequestData);
+      // }
 
-      toast({
-        variant: "default",
-        title: "Sucesso!",
-        description: toastMessage,
-      });
+      // router.refresh();
+      // router.push(`/dashboard/supplier`);
 
-      return;
-    } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Ops, houve um problema.",
-        description: "Tivemos um problema ao processar a requisição.",
-      });
+      // toast({
+      //   variant: "default",
+      //   title: "Sucesso!",
+      //   description: toastMessage,
+      // });
     } finally {
       setLoading(false);
     }
@@ -404,20 +311,19 @@ export const ProductForm: React.FC<ProductFormProps> = ({ initialData }) => {
             <span className="text-lg">Dados da Requisição</span>
           </div>
 
-          <div className="gap-8 md:grid md:grid-cols-3">
-            <FormField
-              control={form.control}
-              name="method"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Método</FormLabel>
-                  <FormControl>
-                    <Input disabled={loading} placeholder="GET, POST, PUT, DELETE" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+          <div className="gap-8 md:grid md:grid-cols-2 lg:grid-cols-3">
+            <div className="flex gap-3 flex-col mb-2">
+              <span className="text-sm">Método</span>
+
+              <Tabs defaultValue="GET" value={currentMethod} onValueChange={setCurrentMethod}>
+                <TabsList>
+                  <TabsTrigger value="GET">GET</TabsTrigger>
+                  <TabsTrigger value="POST">POST</TabsTrigger>
+                  <TabsTrigger value="PUT">PUT</TabsTrigger>
+                  <TabsTrigger value="DELETE">DELETE</TabsTrigger>
+                </TabsList>
+              </Tabs>
+            </div>
 
             <FormField
               control={form.control}
@@ -426,11 +332,35 @@ export const ProductForm: React.FC<ProductFormProps> = ({ initialData }) => {
                 <FormItem>
                   <FormLabel>Url da requisição</FormLabel>
                   <FormControl>
-                    <Input
-                      disabled={loading}
-                      placeholder="Url da requisição do fornecedor"
-                      {...field}
-                    />
+                    <Input disabled={loading} placeholder="Url da requisição do fornecedor" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="timeout"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Timeout</FormLabel>
+                  <FormControl>
+                    <Input disabled={loading} placeholder="Timeout da requisição" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="errorCondition"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Condição de Erro</FormLabel>
+                  <FormControl>
+                    <Input disabled={loading} placeholder="Condição de erro requisição" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -438,36 +368,64 @@ export const ProductForm: React.FC<ProductFormProps> = ({ initialData }) => {
             />
           </div>
 
-          <SupplierParameterList
-            parameters={parameters}
-            onChange={handleUpdateParameterValue}
-            onRemove={handleRemoveParameter}
-            onAddNew={handleAddNewParameter}
-          />
+          <Accordion
+            type="single"
+            collapsible
+            value={currentAccordionVisible}
+            onValueChange={setCurrentAccordionVisible}
+          >
+            <AccordionItem value="parameters">
+              <AccordionTrigger>Adicionar Parâmetros</AccordionTrigger>
+              <AccordionContent>
+                <SupplierParameterList
+                  parameters={parameters}
+                  onChange={handleUpdateParameterValue}
+                  onRemove={handleRemoveParameter}
+                  onAddNew={handleAddNewParameter}
+                />
+              </AccordionContent>
+            </AccordionItem>
 
-          <SupplierHeaderList
-            headers={headers}
-            onChange={handleUpdateHeader}
-            onRemove={handleRemoveHeader}
-            onAddNew={handleAddNewHeader}
-            // onCheckedChange={handleChangeHeaderEnabled}
-          />
+            <AccordionItem value="headers">
+              <AccordionTrigger>Adicionar Headers</AccordionTrigger>
+              <AccordionContent>
+                <SupplierKeyValueList
+                  list={headers}
+                  onChange={(type, value, id) => handleUpdateKeyValue(type, value, id, setHeaders)}
+                  onRemove={(id) => handleRemoveKeyValue(id, setHeaders)}
+                  onAddNew={() => handleAddNewKeyValue(setHeaders)}
+                  title="Headers"
+                />
+              </AccordionContent>
+            </AccordionItem>
 
-          <SupplierRequestBodyList
-            requestBodies={requestBodies}
-            onChange={handleUpdateRequestBody}
-            onRemove={handleRemoveRequestBody}
-            onAddNew={handleAddNewRequestBody}
-            currentBodyFormatter={currentBodyFormatter}
-            onChangeCurrentBodyFormatter={(value) => setCurrentBodyFormatter(value)}
-          />
+            <AccordionItem value="requestBodies">
+              <AccordionTrigger>Adicionar Corpo da requisição</AccordionTrigger>
+              <AccordionContent>
+                <SupplierRequestBodyList
+                  requestBodies={requestBodies}
+                  onChange={(type, value, id) => handleUpdateKeyValue(type, value, id, setRequestBodies)}
+                  onRemove={(id) => handleRemoveKeyValue(id, setRequestBodies)}
+                  onAddNew={() => handleAddNewKeyValue(setRequestBodies)}
+                  currentBodyFormatter={currentBodyFormatter}
+                  onChangeCurrentBodyFormatter={(value) => setCurrentBodyFormatter(value)}
+                />
+              </AccordionContent>
+            </AccordionItem>
 
-          <SupplierStandardResponseList
-            standardResponses={standardResponses}
-            onChange={handleUpdateStandardResponse}
-            onRemove={handleRemoveStandardResponse}
-            onAddNew={handleAddNewStandardResponse}
-          />
+            <AccordionItem value="standardResponses">
+              <AccordionTrigger>Adicionar Resposta padrão</AccordionTrigger>
+              <AccordionContent>
+                <SupplierKeyValueList
+                  list={standardResponses}
+                  onChange={(type, value, id) => handleUpdateKeyValue(type, value, id, setStandardResponses)}
+                  onRemove={(id) => handleRemoveKeyValue(id, setStandardResponses)}
+                  onAddNew={() => handleAddNewKeyValue(setStandardResponses)}
+                  title="Resposta padrão"
+                />
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
 
           <Button disabled={loading} className="ml-auto" type="submit">
             {action}

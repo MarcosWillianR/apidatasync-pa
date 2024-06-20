@@ -2,7 +2,6 @@ import { Plus, Trash } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
 
 export interface RequestBodyItem {
   id: string;
@@ -29,17 +28,11 @@ export function SupplierRequestBodyList({
 }: SupplierRequestBodyListProps) {
   return (
     <>
-      <Separator />
-
-      <div className="flex gap-3 items-center justify-between">
+      <div className="flex gap-3 items-center justify-between mb-6">
         <div className="flex items-center gap-3">
           <span className="text-lg">Corpo requisição</span>
 
-          <Tabs
-            defaultValue="json"
-            value={currentBodyFormatter}
-            onValueChange={onChangeCurrentBodyFormatter}
-          >
+          <Tabs defaultValue="json" value={currentBodyFormatter} onValueChange={onChangeCurrentBodyFormatter}>
             <TabsList>
               <TabsTrigger value="json">JSON</TabsTrigger>
               <TabsTrigger value="xml">XML</TabsTrigger>
@@ -54,17 +47,9 @@ export function SupplierRequestBodyList({
 
       {requestBodies.map(({ id, key, value }) => (
         <div key={id} className="flex items-center gap-3 mb-4">
-          <Input
-            value={key}
-            placeholder="chave"
-            onChange={(e) => onChange("key", e.target.value, id)}
-          />
+          <Input value={key} placeholder="chave" onChange={(e) => onChange("key", e.target.value, id)} />
 
-          <Input
-            value={value}
-            placeholder="valor"
-            onChange={(e) => onChange("value", e.target.value, id)}
-          />
+          <Input value={value} placeholder="valor" onChange={(e) => onChange("value", e.target.value, id)} />
 
           <div className="flex items-center gap-2">
             <Button type="button" variant="destructive" onClick={() => onRemove(id)}>

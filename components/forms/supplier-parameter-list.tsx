@@ -1,7 +1,6 @@
 import { Plus, Trash } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
 
 export interface Parameter {
   id: string;
@@ -15,17 +14,10 @@ interface SupplierParameterListProps {
   onAddNew: () => void;
 }
 
-export function SupplierParameterList({
-  parameters,
-  onChange,
-  onRemove,
-  onAddNew,
-}: SupplierParameterListProps) {
+export function SupplierParameterList({ parameters, onChange, onRemove, onAddNew }: SupplierParameterListProps) {
   return (
     <>
-      <Separator />
-
-      <div className="flex gap-3 items-center justify-between">
+      <div className="flex gap-3 items-center justify-between mb-6">
         <span className="text-lg">Parâmetros</span>
 
         <Button type="button" onClick={onAddNew}>
