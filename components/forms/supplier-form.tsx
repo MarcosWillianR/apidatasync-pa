@@ -277,6 +277,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({ initialData }) => {
           standardResponses.length > 0
             ? convertArrayToJson(standardResponses.map(({ key, value }) => ({ key, value })))
             : null,
+        postBody: "",
       };
 
       const requestBodiesFormatted = convertArrayToJson(
