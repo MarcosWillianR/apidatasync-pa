@@ -79,7 +79,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({ initialData }) => {
           ...data,
         });
       } else {
-        await api.post("/product", formattedRequestData);
+        await api.post("/product", data);
       }
 
       router.refresh();
