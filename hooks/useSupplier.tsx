@@ -2,7 +2,6 @@ import React, { useCallback, useState, createContext, useContext } from "react";
 
 import useAxiosAuth from "@/services/hooks/useAxiosAuth";
 import { useToast } from "@/components/ui/use-toast";
-import { getSession } from "next-auth/react";
 
 interface ArrayObjDTO {
   [key: string]: string;
@@ -47,12 +46,7 @@ function SupplierProvider({ children }: { children: React.ReactNode }) {
     try {
       setIsLoading(true);
 
-      const session = await getSession();
-      const { data } = await axiosAuth.get("supplier", {
-        headers: {
-          Authorization: `Bearer ${session?.user.token}`,
-        },
-      });
+      const { data } = await axiosAuth.get("supplier");
 
       setSuppliers(data.content);
     } finally {
@@ -65,12 +59,7 @@ function SupplierProvider({ children }: { children: React.ReactNode }) {
       try {
         setIsLoading(true);
 
-        const session = await getSession();
-        const { data } = await axiosAuth.get(`supplier/${id}`, {
-          headers: {
-            Authorization: `Bearer ${session?.user.token}`,
-          },
-        });
+        const { data } = await axiosAuth.get(`supplier/${id}`);
 
         return data || null;
       } finally {

@@ -15,15 +15,22 @@ const breadcrumbItems = [
 export default function Page() {
   const params = useParams<{ supplierId: string }>();
   const [supplier, setSupplier] = useState<Supplier | null>(null);
-  const { getSupplier, isLoading } = useSupplier();
+  const [isLoading, setIsLoading] = useState<boolean>(!!Number(params.supplierId));
+  const { getSupplier } = useSupplier();
 
   useEffect(() => {
     async function getSupplierData() {
-      const response = await getSupplier(Number(params.supplierId));
-      setSupplier(response);
+      try {
+        const response = await getSupplier(Number(params.supplierId));
+        setSupplier(response);
+      } finally {
+        setIsLoading(false);
+      }
     }
 
-    if (params.supplierId) getSupplierData();
+    if (Number(params.supplierId)) {
+      getSupplierData();
+    }
   }, [getSupplier, params.supplierId]);
 
   return (
