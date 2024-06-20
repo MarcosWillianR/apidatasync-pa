@@ -4,18 +4,23 @@ import useAxiosAuth from "@/services/hooks/useAxiosAuth";
 import { useToast } from "@/components/ui/use-toast";
 import { Supplier } from "./useSupplier";
 
+interface ArrayObjDTO {
+  [key: string]: string;
+}
+
 export interface Product {
   id: number;
   name: string;
   supplierList: Supplier[];
   totalPrice: number;
   totalCost: number;
+  standardResponse: ArrayObjDTO | null;
 }
 
 interface ProductContextProps {
   products: Product[] | null;
   getProducts: () => Promise<void>;
-  getProduct: (id: number) => Product | null;
+  getProduct: (id: number) => Promise<Product | null>;
   isLoading: boolean;
   deleteProduct: (id: number) => Promise<void>;
   isDeletingProduct: boolean;
@@ -36,25 +41,17 @@ function ProductProvider({ children }: { children: React.ReactNode }) {
       setIsLoading(true);
       const { data } = await axiosAuth.get("product");
       setProducts(data.content);
-    } catch (error: any) {
-      console.log(`ERROR STATUS: `, error.status);
-
-      toast({
-        variant: "destructive",
-        title: "Ops, houve um problema.",
-        description: error,
-      });
     } finally {
       setIsLoading(false);
     }
-  }, [axiosAuth, toast]);
+  }, [axiosAuth]);
 
   const getProduct = useCallback(
-    (id: number) => {
-      const product = products?.find((product) => product.id === id);
-      return product || null;
+    async (id: number) => {
+      const { data } = await axiosAuth.get(`product/${id}`);
+      return data || null;
     },
-    [products],
+    [axiosAuth],
   );
 
   const deleteProduct = useCallback(
@@ -63,21 +60,11 @@ function ProductProvider({ children }: { children: React.ReactNode }) {
         setIsDeletingProduct(true);
         await axiosAuth.delete(`product/${id}`);
 
-        setProducts(
-          (currentProducts) => currentProducts?.filter((product) => product.id !== id) || null,
-        );
+        setProducts((currentProducts) => currentProducts?.filter((product) => product.id !== id) || null);
 
         toast({
           title: "Sucesso!",
           description: "Produto removido com sucesso.",
-        });
-      } catch (error: any) {
-        console.log(`ERROR STATUS: `, error.status);
-
-        toast({
-          variant: "destructive",
-          title: "Ops, houve um problema.",
-          description: error,
         });
       } finally {
         setIsDeletingProduct(false);

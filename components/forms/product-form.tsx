@@ -1,29 +1,24 @@
 "use client";
 import * as z from "zod";
 import { useState } from "react";
+import { v4 as uuidv4 } from "uuid";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Separator } from "@/components/ui/separator";
 import { Heading } from "@/components/ui/heading";
 import { useToast } from "../ui/use-toast";
 import { Supplier } from "@/hooks/useSupplier";
 import api from "@/services/api";
+import { Product } from "@/hooks/useProduct";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "../ui/accordion";
+import { KeyValueItem, SupplierKeyValueList } from "./supplier-key-value-list";
 
 const formSchema = z.object({
-  name: z
-    .string()
-    .min(3, { message: "O nome é muito curto, insira no mínimo 5 caracteres" }),
+  name: z.string().min(3, { message: "O nome é muito curto, insira no mínimo 5 caracteres" }),
   supplierIds: z.string(),
   totalPrice: z.coerce.number(),
 });
@@ -31,26 +26,43 @@ const formSchema = z.object({
 type ProductFormValues = z.infer<typeof formSchema>;
 
 interface ProductFormProps {
-  initialData: any | null;
+  initialData: Product | null;
 }
 
 export const ProductForm: React.FC<ProductFormProps> = ({ initialData }) => {
   const router = useRouter();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
+  const [currentAccordionVisible, setCurrentAccordionVisible] = useState("");
+  const [standardResponses, setStandardResponses] = useState<KeyValueItem[]>(() => {
+    if (initialData !== null && initialData.standardResponse !== null) {
+      const standardResponsesFormatted: KeyValueItem[] = [];
+
+      Object.keys(initialData.standardResponse).forEach((key) => {
+        const newItem: KeyValueItem = {
+          id: uuidv4(),
+          key,
+          value: initialData.standardResponse![key],
+        };
+
+        standardResponsesFormatted.push(newItem);
+      });
+
+      return standardResponsesFormatted;
+    }
+
+    return [];
+  });
+
   const title = initialData ? "Editar produto" : "Criar produto";
-  const description = initialData
-    ? "Editar um produto."
-    : "Criar um novo produto";
+  const description = initialData ? "Editar um produto." : "Criar um novo produto";
   const toastMessage = initialData ? "Produto atualizado." : "Produto criado.";
   const action = initialData ? "Salvar alterações" : "Criar";
 
   const defaultValues = initialData
     ? {
         ...initialData,
-        supplierIds: initialData.supplierList
-          .map((supplier: Supplier) => supplier.id)
-          .join(", "),
+        supplierIds: initialData.supplierList.map((supplier: Supplier) => supplier.id).join(", "),
       }
     : {
         name: "",
@@ -96,12 +108,6 @@ export const ProductForm: React.FC<ProductFormProps> = ({ initialData }) => {
         title: "Sucesso!",
         description: toastMessage,
       });
-    } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Ops, houve um problema.",
-        description: "Tivemos um problema ao processar a requisição.",
-      });
     } finally {
       setLoading(false);
     }
@@ -116,10 +122,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({ initialData }) => {
       <Separator />
 
       <Form {...form}>
-        <form
-          onSubmit={form.handleSubmit(onSubmit)}
-          className="w-full space-y-8"
-        >
+        <form onSubmit={form.handleSubmit(onSubmit)} className="w-full space-y-8">
           <div className="gap-8 md:grid md:grid-cols-3">
             <FormField
               control={form.control}
@@ -128,11 +131,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({ initialData }) => {
                 <FormItem>
                   <FormLabel>Nome</FormLabel>
                   <FormControl>
-                    <Input
-                      disabled={loading}
-                      placeholder="Nome do produto"
-                      {...field}
-                    />
+                    <Input disabled={loading} placeholder="Nome do produto" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -145,11 +144,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({ initialData }) => {
                 <FormItem>
                   <FormLabel>Ids dos Fornecedores</FormLabel>
                   <FormControl>
-                    <Input
-                      disabled={loading}
-                      placeholder="ex: 1, 5, 6..."
-                      {...field}
-                    />
+                    <Input disabled={loading} placeholder="ex: 1, 5, 6..." {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -169,6 +164,21 @@ export const ProductForm: React.FC<ProductFormProps> = ({ initialData }) => {
               )}
             />
           </div>
+
+          <Accordion
+            type="single"
+            collapsible
+            value={currentAccordionVisible}
+            onValueChange={setCurrentAccordionVisible}
+          >
+            <AccordionItem value="standardResponses">
+              <AccordionTrigger>Adicionar Resposta padrão</AccordionTrigger>
+              <AccordionContent>
+                <SupplierKeyValueList list={standardResponses} setList={setStandardResponses} title="Resposta padrão" />
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
+
           <Button isLoading={loading} className="ml-auto" type="submit">
             {action}
           </Button>

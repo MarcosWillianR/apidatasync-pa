@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Parameter, SupplierParameterList } from "./supplier-parameter-list";
-import { RequestBodyItem, SupplierRequestBodyList } from "./supplier-request-body-list";
+import { SupplierRequestBodyList } from "./supplier-request-body-list";
 
 import { KeyValueItem, SupplierKeyValueList } from "./supplier-key-value-list";
 
@@ -488,13 +488,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({ initialData }) => {
             <AccordionItem value="headers">
               <AccordionTrigger>Adicionar Headers</AccordionTrigger>
               <AccordionContent>
-                <SupplierKeyValueList
-                  list={headers}
-                  onChange={(type, value, id) => handleUpdateKeyValue(type, value, id, setHeaders)}
-                  onRemove={(id) => handleRemoveKeyValue(id, setHeaders)}
-                  onAddNew={() => handleAddNewKeyValue(setHeaders)}
-                  title="Headers"
-                />
+                <SupplierKeyValueList list={headers} setList={setHeaders} title="Headers" />
               </AccordionContent>
             </AccordionItem>
 
@@ -515,13 +509,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({ initialData }) => {
             <AccordionItem value="standardResponses">
               <AccordionTrigger>Adicionar Resposta padrão</AccordionTrigger>
               <AccordionContent>
-                <SupplierKeyValueList
-                  list={standardResponses}
-                  onChange={(type, value, id) => handleUpdateKeyValue(type, value, id, setStandardResponses)}
-                  onRemove={(id) => handleRemoveKeyValue(id, setStandardResponses)}
-                  onAddNew={() => handleAddNewKeyValue(setStandardResponses)}
-                  title="Resposta padrão"
-                />
+                <SupplierKeyValueList list={standardResponses} setList={setStandardResponses} title="Resposta padrão" />
               </AccordionContent>
             </AccordionItem>
           </Accordion>

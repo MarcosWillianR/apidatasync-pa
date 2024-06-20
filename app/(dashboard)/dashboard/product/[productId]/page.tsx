@@ -1,10 +1,11 @@
 "use client";
-import React from "react";
+import React, { useState, useEffect } from "react";
 import BreadCrumb from "@/components/breadcrumb";
 import { useParams } from "next/navigation";
 import { ProductForm } from "@/components/forms/product-form";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { useProduct } from "@/hooks/useProduct";
+import { Product, useProduct } from "@/hooks/useProduct";
+import { Loading } from "@/components/loading";
 
 const breadcrumbItems = [
   { title: "Produtos", link: "/dashboard/product" },
@@ -13,13 +14,31 @@ const breadcrumbItems = [
 
 export default function Page() {
   const params = useParams<{ productId: string }>();
+  const [product, setProduct] = useState<Product | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(!!Number(params.productId));
   const { getProduct } = useProduct();
+
+  useEffect(() => {
+    async function getProductData() {
+      try {
+        const response = await getProduct(Number(params.productId));
+        setProduct(response);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    if (Number(params.productId)) {
+      getProductData();
+    }
+  }, [getProduct, params.productId]);
 
   return (
     <ScrollArea className="h-full">
       <div className="flex-1 space-y-4 p-5">
         <BreadCrumb items={breadcrumbItems} />
-        <ProductForm initialData={getProduct(Number(params.productId))} />
+
+        {isLoading ? <Loading /> : <ProductForm initialData={product} />}
       </div>
     </ScrollArea>
   );

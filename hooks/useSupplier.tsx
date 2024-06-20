@@ -56,15 +56,8 @@ function SupplierProvider({ children }: { children: React.ReactNode }) {
 
   const getSupplier = useCallback(
     async (id: number) => {
-      try {
-        setIsLoading(true);
-
-        const { data } = await axiosAuth.get(`supplier/${id}`);
-
-        return data || null;
-      } finally {
-        setIsLoading(false);
-      }
+      const { data } = await axiosAuth.get(`supplier/${id}`);
+      return data || null;
     },
     [axiosAuth],
   );
