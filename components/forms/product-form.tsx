@@ -73,22 +73,10 @@ export const ProductForm: React.FC<ProductFormProps> = ({ initialData }) => {
     try {
       setLoading(true);
 
-      const formattedSupplierIds = data.supplierIds
-        ? data.supplierIds
-            .split(",")
-            .map(Number)
-            .filter((num) => !isNaN(num))
-        : [];
-
-      const formattedRequestData = {
-        ...data,
-        supplierIds: formattedSupplierIds,
-      };
-
       if (initialData) {
         await api.put("/product", {
           id: initialData.id,
-          ...formattedRequestData,
+          ...data,
         });
       } else {
         await api.post("/product", formattedRequestData);
