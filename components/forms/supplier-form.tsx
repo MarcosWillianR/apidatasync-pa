@@ -134,17 +134,32 @@ export const ProductForm: React.FC<ProductFormProps> = ({ initialData }) => {
       } else if (type === "XML") {
         xml2js.parseString(initialData.postBody, (error, result) => {
           if (!error) {
-            Object.keys(result.XmlInputConsulta).forEach((key) => {
-              if (key !== "$") {
-                const newItem: KeyValueItem = {
-                  id: uuidv4(),
-                  key,
-                  value: result.XmlInputConsulta[key],
-                };
+            const xmlType = Object.keys(result)[0];
 
-                requestBodiesFormatted.push(newItem);
+            switch (xmlType) {
+              case "soap:Envelope": {
+                console.log(result);
+                break;
               }
-            });
+              case "XmlInputConsulta": {
+                Object.keys(result.XmlInputConsulta).forEach((key) => {
+                  if (key !== "$") {
+                    const newItem: KeyValueItem = {
+                      id: uuidv4(),
+                      key,
+                      value: result.XmlInputConsulta[key],
+                    };
+
+                    requestBodiesFormatted.push(newItem);
+                  }
+                });
+                break;
+              }
+              default: {
+                console.log("DEFAULT");
+                console.log(result);
+              }
+            }
           }
         });
       }
