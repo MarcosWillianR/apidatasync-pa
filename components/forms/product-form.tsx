@@ -11,7 +11,6 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Separator } from "@/components/ui/separator";
 import { Heading } from "@/components/ui/heading";
 import { useToast } from "../ui/use-toast";
-import { Supplier } from "@/hooks/useSupplier";
 import api from "@/services/api";
 import { Product } from "@/hooks/useProduct";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "../ui/accordion";
@@ -19,7 +18,6 @@ import { KeyValueItem, SupplierKeyValueList } from "./supplier-key-value-list";
 
 const formSchema = z.object({
   name: z.string().min(3, { message: "O nome é muito curto, insira no mínimo 5 caracteres" }),
-  supplierIds: z.string(),
   totalPrice: z.coerce.number(),
 });
 
@@ -60,13 +58,9 @@ export const ProductForm: React.FC<ProductFormProps> = ({ initialData }) => {
   const action = initialData ? "Salvar alterações" : "Criar";
 
   const defaultValues = initialData
-    ? {
-        ...initialData,
-        supplierIds: initialData.supplierList.map((supplier: Supplier) => supplier.id).join(", "),
-      }
+    ? initialData
     : {
         name: "",
-        supplierIds: "",
         totalPrice: 0,
       };
 
@@ -132,19 +126,6 @@ export const ProductForm: React.FC<ProductFormProps> = ({ initialData }) => {
                   <FormLabel>Nome</FormLabel>
                   <FormControl>
                     <Input disabled={loading} placeholder="Nome do produto" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="supplierIds"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Ids dos Fornecedores</FormLabel>
-                  <FormControl>
-                    <Input disabled={loading} placeholder="ex: 1, 5, 6..." {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
