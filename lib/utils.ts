@@ -1,6 +1,6 @@
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
-import { Builder } from 'xml2js';
+import { Builder } from "xml2js";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -27,18 +27,35 @@ export function convertArrayToJson(array: ArrayItem[]) {
 
 export function convertObjectToXML(obj: ArrayObject) {
   const builder = new Builder({
-      xmldec: {
-          version: '1.0',
-          encoding: 'UTF-8'
-      },
-      rootName: 'XmlInputConsulta',
-      headless: false,
-      renderOpts: { pretty: false }
+    xmldec: {
+      version: "1.0",
+      encoding: "UTF-8",
+    },
+    rootName: "XmlInputConsulta",
+    headless: false,
+    renderOpts: { pretty: false },
   });
 
   const xml = builder.buildObject(obj);
 
-  const namespaces = ' xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"';
-  const xmlWithNamespaces = xml.replace('<XmlInputConsulta>', `<XmlInputConsulta ${namespaces}>`);
+  const namespaces =
+    ' xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"';
+  const xmlWithNamespaces = xml.replace("<XmlInputConsulta>", `<XmlInputConsulta ${namespaces}>`);
   return xmlWithNamespaces;
+}
+
+export function identifyFormat(data: string) {
+  try {
+    JSON.parse(data);
+    return "JSON";
+  } catch (e) {
+    // Se der erro no parse, não é JSON
+  }
+
+  const isXML = data.trim().startsWith("<") && data.trim().endsWith(">");
+  if (isXML) {
+    return "XML";
+  }
+
+  return "Unknown format";
 }

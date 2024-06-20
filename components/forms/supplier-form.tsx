@@ -3,6 +3,7 @@ import * as z from "zod";
 import { Dispatch, SetStateAction, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { v4 as uuidv4 } from "uuid";
+import xml2js from "xml2js";
 import { useForm } from "react-hook-form";
 import { useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
@@ -10,19 +11,16 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Parameter, SupplierParameterList } from "./supplier-parameter-list";
-import { HeaderItem, SupplierHeaderList } from "./supplier-header-list";
 import { RequestBodyItem, SupplierRequestBodyList } from "./supplier-request-body-list";
 
 import { KeyValueItem, SupplierKeyValueList } from "./supplier-key-value-list";
 
-import { StandardResponseItem, SupplierStandardResponseList } from "./supplier-standard-response-list";
 import { Separator } from "@/components/ui/separator";
 import { Heading } from "@/components/ui/heading";
 import { useToast } from "../ui/use-toast";
 import { Supplier } from "@/hooks/useSupplier";
 import useAxiosAuth from "@/services/hooks/useAxiosAuth";
-import { convertArrayToJson, convertObjectToXML } from "@/lib/utils";
-import { useSession } from "next-auth/react";
+import { convertArrayToJson, convertObjectToXML, identifyFormat } from "@/lib/utils";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "../ui/accordion";
 
 const formSchema = z.object({
@@ -66,14 +64,103 @@ export const ProductForm: React.FC<ProductFormProps> = ({ initialData }) => {
   const router = useRouter();
   const { toast } = useToast();
   const axiosAuth = useAxiosAuth();
-  const session = useSession();
   const [loading, setLoading] = useState(false);
   const [currentAccordionVisible, setCurrentAccordionVisible] = useState("");
-  const [currentMethod, setCurrentMethod] = useState("GET");
-  const [headers, setHeaders] = useState<KeyValueItem[]>([]);
-  const [standardResponses, setStandardResponses] = useState<KeyValueItem[]>([]);
-  const [requestBodies, setRequestBodies] = useState<KeyValueItem[]>([]);
-  const [currentBodyFormatter, setCurrentBodyFormatter] = useState("json");
+  const [currentMethod, setCurrentMethod] = useState(() => {
+    if (initialData !== null) {
+      return initialData.method;
+    }
+
+    return "GET";
+  });
+  const [headers, setHeaders] = useState<KeyValueItem[]>(() => {
+    if (initialData !== null && initialData.postHeader !== null) {
+      const headersFormatted: KeyValueItem[] = [];
+
+      if (initialData.postHeader !== null) {
+        Object.keys(initialData.postHeader).forEach((key) => {
+          const newItem: KeyValueItem = {
+            id: uuidv4(),
+            key,
+            value: initialData.postHeader![key],
+          };
+
+          headersFormatted.push(newItem);
+        });
+      }
+
+      return headersFormatted;
+    }
+
+    return [];
+  });
+  const [standardResponses, setStandardResponses] = useState<KeyValueItem[]>(() => {
+    if (initialData !== null && initialData.standardResponse !== null) {
+      const standardResponsesFormatted: KeyValueItem[] = [];
+
+      Object.keys(initialData.standardResponse).forEach((key) => {
+        const newItem: KeyValueItem = {
+          id: uuidv4(),
+          key,
+          value: initialData.standardResponse![key],
+        };
+
+        standardResponsesFormatted.push(newItem);
+      });
+
+      return standardResponsesFormatted;
+    }
+
+    return [];
+  });
+  const [requestBodies, setRequestBodies] = useState<KeyValueItem[]>(() => {
+    if (initialData !== null) {
+      const requestBodiesFormatted: KeyValueItem[] = [];
+
+      const type = identifyFormat(initialData.postBody);
+
+      if (type === "JSON") {
+        const postBodyParsed = JSON.parse(initialData.postBody);
+        Object.keys(postBodyParsed).forEach((key) => {
+          const newItem: KeyValueItem = {
+            id: uuidv4(),
+            key,
+            value: postBodyParsed![key],
+          };
+
+          requestBodiesFormatted.push(newItem);
+        });
+      } else if (type === "XML") {
+        xml2js.parseString(initialData.postBody, (error, result) => {
+          if (!error) {
+            Object.keys(result.XmlInputConsulta).forEach((key) => {
+              if (key !== "$") {
+                const newItem: KeyValueItem = {
+                  id: uuidv4(),
+                  key,
+                  value: result.XmlInputConsulta[key],
+                };
+
+                requestBodiesFormatted.push(newItem);
+              }
+            });
+          }
+        });
+      }
+
+      return requestBodiesFormatted;
+    }
+
+    return [];
+  });
+
+  const [currentBodyFormatter, setCurrentBodyFormatter] = useState(() => {
+    if (initialData !== null) {
+      return identifyFormat(initialData.postBody);
+    }
+    return "JSON";
+  });
+
   const [parameters, setParameters] = useState<Parameter[]>(() => {
     if (initialData !== null) {
       return initialData.parameterType.map((pt) => ({
@@ -203,35 +290,33 @@ export const ProductForm: React.FC<ProductFormProps> = ({ initialData }) => {
 
       const requestBodiesFormatted = convertArrayToJson(requestBodies);
 
-      if (currentBodyFormatter === "json") {
+      if (currentBodyFormatter === "JSON") {
         formattedRequestData.postBody = JSON.stringify(requestBodiesFormatted);
       }
 
-      if (currentBodyFormatter === "xml") {
+      if (currentBodyFormatter === "XML") {
         formattedRequestData.postBody = convertObjectToXML(requestBodiesFormatted);
       }
 
-      console.log(formattedRequestData);
+      setLoading(true);
 
-      // setLoading(true);
+      if (initialData) {
+        await axiosAuth.put("/supplier", {
+          id: initialData.id,
+          ...formattedRequestData,
+        });
+      } else {
+        await axiosAuth.post("/supplier", formattedRequestData);
+      }
 
-      // if (initialData) {
-      //   await axiosAuth.put("/supplier", {
-      //     id: initialData.id,
-      //     ...formattedRequestData,
-      //   });
-      // } else {
-      //   await axiosAuth.post("/supplier", formattedRequestData);
-      // }
+      router.refresh();
+      router.push(`/dashboard/supplier`);
 
-      // router.refresh();
-      // router.push(`/dashboard/supplier`);
-
-      // toast({
-      //   variant: "default",
-      //   title: "Sucesso!",
-      //   description: toastMessage,
-      // });
+      toast({
+        variant: "default",
+        title: "Sucesso!",
+        description: toastMessage,
+      });
     } finally {
       setLoading(false);
     }

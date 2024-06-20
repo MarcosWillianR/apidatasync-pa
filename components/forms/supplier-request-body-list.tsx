@@ -32,10 +32,10 @@ export function SupplierRequestBodyList({
         <div className="flex items-center gap-3">
           <span className="text-lg">Corpo requisição</span>
 
-          <Tabs defaultValue="json" value={currentBodyFormatter} onValueChange={onChangeCurrentBodyFormatter}>
+          <Tabs defaultValue="JSON" value={currentBodyFormatter} onValueChange={onChangeCurrentBodyFormatter}>
             <TabsList>
-              <TabsTrigger value="json">JSON</TabsTrigger>
-              <TabsTrigger value="xml">XML</TabsTrigger>
+              <TabsTrigger value="JSON">JSON</TabsTrigger>
+              <TabsTrigger value="XML">XML</TabsTrigger>
             </TabsList>
           </Tabs>
         </div>

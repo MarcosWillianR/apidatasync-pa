@@ -4,6 +4,10 @@ import useAxiosAuth from "@/services/hooks/useAxiosAuth";
 import { useToast } from "@/components/ui/use-toast";
 import { getSession } from "next-auth/react";
 
+interface ArrayObjDTO {
+  [key: string]: string;
+}
+
 export interface Supplier {
   id: number;
   name: string;
@@ -15,8 +19,8 @@ export interface Supplier {
   errorCondition: string;
   method: string;
   postBody: string;
-  postHeader: string;
-  standardResponse: string;
+  postHeader: ArrayObjDTO | null;
+  standardResponse: ArrayObjDTO | null;
   timeout: number;
 }
 
@@ -82,9 +86,7 @@ function SupplierProvider({ children }: { children: React.ReactNode }) {
         setIsDeletingSupplier(true);
         await axiosAuth.delete(`supplier/${id}`);
 
-        setSuppliers(
-          (currentSuppliers) => currentSuppliers?.filter((supplier) => supplier.id !== id) || null,
-        );
+        setSuppliers((currentSuppliers) => currentSuppliers?.filter((supplier) => supplier.id !== id) || null);
 
         toast({
           title: "Sucesso!",
