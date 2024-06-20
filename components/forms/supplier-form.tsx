@@ -114,13 +114,14 @@ export const ProductForm: React.FC<ProductFormProps> = ({ initialData }) => {
     return [];
   });
   const [requestBodies, setRequestBodies] = useState<KeyValueItem[]>(() => {
-    if (initialData !== null) {
+    if (initialData !== null && initialData.postBody !== null) {
       const requestBodiesFormatted: KeyValueItem[] = [];
 
       const type = identifyFormat(initialData.postBody);
 
       if (type === "JSON") {
         const postBodyParsed = JSON.parse(initialData.postBody);
+
         Object.keys(postBodyParsed).forEach((key) => {
           const newItem: KeyValueItem = {
             id: uuidv4(),
@@ -404,8 +405,6 @@ export const ProductForm: React.FC<ProductFormProps> = ({ initialData }) => {
                 <TabsList>
                   <TabsTrigger value="GET">GET</TabsTrigger>
                   <TabsTrigger value="POST">POST</TabsTrigger>
-                  <TabsTrigger value="PUT">PUT</TabsTrigger>
-                  <TabsTrigger value="DELETE">DELETE</TabsTrigger>
                 </TabsList>
               </Tabs>
             </div>
