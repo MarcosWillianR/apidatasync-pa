@@ -32,10 +32,6 @@ export function DataTable<TData, TValue>({
     state: { pagination },
   });
 
-  useEffect(() => {
-    console.log(pagination);
-  }, [pagination]);
-
   /* this can be used to get the selectedrows 
   console.log("value", table.getFilteredSelectedRowModel()); */
 
