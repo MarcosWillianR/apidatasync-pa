@@ -143,6 +143,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({ initialData }) => {
               }
               case "XmlInputConsulta": {
                 Object.keys(result.XmlInputConsulta).forEach((key) => {
+                  console.log(result);
                   if (key !== "$") {
                     const newItem: KeyValueItem = {
                       id: uuidv4(),

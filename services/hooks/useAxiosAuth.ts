@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { getSession } from "next-auth/react";
+import { getSession, signOut } from "next-auth/react";
 import { InternalAxiosRequestConfig } from "axios";
 
 import api from "@/services/api";
@@ -22,8 +22,8 @@ const useAxiosAuth = () => {
     const handleErrorResponse = (error: any) => {
       if (error.response) {
         switch (error.response.status) {
-          case 401:
-            // Handle unauthorized error (e.g., redirect to login)
+          case 403:
+            signOut();
             break;
           // Add other status codes if needed
           default:
