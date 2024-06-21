@@ -60,6 +60,8 @@ function ProductProvider({ children }: { children: React.ReactNode }) {
         setIsDeletingProduct(true);
         await axiosAuth.delete(`product/${id}`);
 
+        console.log(id);
+
         setProducts((currentProducts) => currentProducts?.filter((product) => product.id !== id) || null);
 
         toast({
