@@ -1,13 +1,6 @@
 "use client";
 import { Button } from "@/components/ui/button";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { signIn } from "next-auth/react";
@@ -47,7 +40,7 @@ export default function LoginForm() {
     if (result?.error) {
       toast({
         variant: "destructive",
-        title: "Ops, problema à visa!",
+        title: "Ops, problema à vista!",
         description: result?.error,
       });
     } else {
@@ -58,10 +51,7 @@ export default function LoginForm() {
   return (
     <>
       <Form {...form}>
-        <form
-          onSubmit={form.handleSubmit(onSubmit)}
-          className="space-y-2 w-full"
-        >
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-2 w-full">
           <FormField
             control={form.control}
             name="email"
@@ -69,11 +59,7 @@ export default function LoginForm() {
               <FormItem>
                 <FormLabel>Email</FormLabel>
                 <FormControl>
-                  <Input
-                    type="email"
-                    placeholder="Insira seu e-mail"
-                    {...field}
-                  />
+                  <Input type="email" placeholder="Insira seu e-mail" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -87,11 +73,7 @@ export default function LoginForm() {
               <FormItem>
                 <FormLabel>Senha</FormLabel>
                 <FormControl>
-                  <Input
-                    type="password"
-                    placeholder="Insira sua senha"
-                    {...field}
-                  />
+                  <Input type="password" placeholder="Insira sua senha" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
