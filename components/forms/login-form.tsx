@@ -1,13 +1,14 @@
 "use client";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { signIn } from "next-auth/react";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { signIn } from "next-auth/react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useToast } from "../ui/use-toast";
-import { useForm } from "react-hook-form";
-import * as z from "zod";
 
 const formSchema = z.object({
   email: z.string().email({ message: "Insira um email válido" }),
@@ -29,14 +30,17 @@ export default function LoginForm() {
     },
   });
 
+  const [isLoading, setIsLoading] = useState(false);
+
   const onSubmit = async (data: UserFormValue) => {
+    setIsLoading(true);
     const result = await signIn("credentials", {
       redirect: false,
       email: data.email,
       password: data.password,
       callbackUrl: callbackUrl ?? "/dashboard",
     });
-
+    setIsLoading(false);
     if (result?.error) {
       toast({
         variant: "destructive",
@@ -59,7 +63,7 @@ export default function LoginForm() {
               <FormItem>
                 <FormLabel>Email</FormLabel>
                 <FormControl>
-                  <Input type="email" placeholder="Insira seu e-mail" {...field} />
+                  <Input type="email" placeholder="Insira seu e-mail" disabled={isLoading} {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -73,7 +77,7 @@ export default function LoginForm() {
               <FormItem>
                 <FormLabel>Senha</FormLabel>
                 <FormControl>
-                  <Input type="password" placeholder="Insira sua senha" {...field} />
+                  <Input type="password" placeholder="Insira sua senha" disabled={isLoading} {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -81,7 +85,7 @@ export default function LoginForm() {
           />
 
           <div className="pt-4 flex flex-col items-center">
-            <Button className="ml-auto w-full" type="submit">
+            <Button isLoading={isLoading} className="ml-auto w-full" type="submit">
               Entrar
             </Button>
           </div>
