@@ -12,12 +12,12 @@ export default function Providers({
   children: React.ReactNode;
 }) {
   return (
-    <SupplierProvider>
-      <ProductProvider>
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-          <SessionProvider session={session}>{children}</SessionProvider>
-        </ThemeProvider>
-      </ProductProvider>
-    </SupplierProvider>
+    <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+      <SessionProvider session={session}>
+        <SupplierProvider>
+          <ProductProvider>{children}</ProductProvider>
+        </SupplierProvider>
+      </SessionProvider>
+    </ThemeProvider>
   );
 }

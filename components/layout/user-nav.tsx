@@ -22,10 +22,7 @@ export function UserNav() {
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" className="relative h-8 w-8 rounded-full">
             <Avatar className="h-8 w-8">
-              <AvatarImage
-                src={session.user?.image ?? ""}
-                alt={session.user?.firstName ?? ""}
-              />
+              <AvatarImage src={session.user?.image ?? ""} alt={session.user?.firstName ?? ""} />
               <AvatarFallback>{session.user?.firstName?.[0]}</AvatarFallback>
             </Avatar>
           </Button>
@@ -36,9 +33,7 @@ export function UserNav() {
               <p className="text-sm font-medium leading-none">
                 {`${session.user?.firstName} ${session.user.lastName}`}
               </p>
-              <p className="text-xs leading-none text-muted-foreground">
-                {session.user?.email}
-              </p>
+              <p className="text-xs leading-none text-muted-foreground">{session.user?.email}</p>
             </div>
           </DropdownMenuLabel>
           <DropdownMenuSeparator />

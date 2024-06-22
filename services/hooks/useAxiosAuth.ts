@@ -1,21 +1,21 @@
 "use client";
 
 import { useEffect } from "react";
-import { getSession, signOut } from "next-auth/react";
+import { signOut, useSession } from "next-auth/react";
 import { InternalAxiosRequestConfig } from "axios";
 
 import api from "@/services/api";
 import { toast } from "@/components/ui/use-toast";
 
 const useAxiosAuth = () => {
+  const { data: session } = useSession();
+
   useEffect(() => {
     const addAuthHeader = async (config: InternalAxiosRequestConfig) => {
-      const session = await getSession();
-
-      if (session?.user?.token && !config.headers["Authorization"]) {
-        config.headers.Authorization = `Bearer ${session.user.token}`;
+      if (session?.user.token && !config.headers["Authorization"]) {
+        config.headers.Authorization = `Bearer ${session?.user.token}`;
       }
-
+  
       return config;
     };
 
@@ -23,7 +23,7 @@ const useAxiosAuth = () => {
       if (error.response) {
         switch (error.response.status) {
           case 403:
-            signOut();
+            // signOut();
             break;
           // Add other status codes if needed
           default:
@@ -47,7 +47,7 @@ const useAxiosAuth = () => {
       api.interceptors.request.eject(requestInterceptor);
       api.interceptors.response.eject(responseInterceptor);
     };
-  }, []);
+  }, [session]);
 
   return api;
 };

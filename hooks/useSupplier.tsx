@@ -24,7 +24,7 @@ export interface Supplier {
 }
 
 interface SupplierContextProps {
-  suppliers: Supplier[] | null;
+  suppliers: Supplier[];
   getSuppliers: () => Promise<void>;
   getSupplier: (id: number) => Promise<Supplier | null>;
   isLoading: boolean;
@@ -35,7 +35,7 @@ interface SupplierContextProps {
 const SupplierContext = createContext<SupplierContextProps>({} as SupplierContextProps);
 
 function SupplierProvider({ children }: { children: React.ReactNode }) {
-  const [suppliers, setSuppliers] = useState<Supplier[] | null>(null);
+  const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isDeletingSupplier, setIsDeletingSupplier] = useState(false);
 
