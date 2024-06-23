@@ -2,28 +2,27 @@
 
 import { useEffect } from "react";
 import { signOut, useSession } from "next-auth/react";
-import { InternalAxiosRequestConfig } from "axios";
 
 import api from "@/services/api";
 import { toast } from "@/components/ui/use-toast";
 
 const useAxiosAuth = () => {
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
 
   useEffect(() => {
-    const addAuthHeader = async (config: InternalAxiosRequestConfig) => {
+    const requestInterceptor = api.interceptors.request.use((config) => {
       if (session?.user.token && !config.headers["Authorization"]) {
         config.headers.Authorization = `Bearer ${session?.user.token}`;
       }
   
       return config;
-    };
+    }, Promise.reject);
 
-    const handleErrorResponse = (error: any) => {
+    const responseInterceptor = api.interceptors.response.use((response) => response, (error) => {
       if (error.response) {
         switch (error.response.status) {
           case 403:
-            // signOut();
+            signOut();
             break;
           // Add other status codes if needed
           default:
@@ -38,16 +37,13 @@ const useAxiosAuth = () => {
       });
 
       return Promise.reject(error);
-    };
-
-    const requestInterceptor = api.interceptors.request.use(addAuthHeader, Promise.reject);
-    const responseInterceptor = api.interceptors.response.use((response) => response, handleErrorResponse);
+    });
 
     return () => {
       api.interceptors.request.eject(requestInterceptor);
       api.interceptors.response.eject(responseInterceptor);
     };
-  }, [session]);
+  }, [session, status]);
 
   return api;
 };

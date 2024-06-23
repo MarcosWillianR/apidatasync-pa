@@ -74,6 +74,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({ initialData, suppliers
     : {
         name: "",
         totalPrice: 0,
+        totalCost: 0,
       };
 
   function changeSupplierSelected(id: number) {
@@ -103,23 +104,23 @@ export const ProductForm: React.FC<ProductFormProps> = ({ initialData, suppliers
         standardResponse: standardResponses.length > 0 ? convertArrayToJson(standardResponses) : null,
       };
 
-      // if (initialData) {
-      //   await api.put("/product", {
-      //     id: initialData.id,
-      //     ...formattedRequestDTO,
-      //   });
-      // } else {
-      //   await api.post("/product", formattedRequestDTO);
-      // }
+      if (initialData) {
+        await api.put("/product", {
+          id: initialData.id,
+          ...formattedRequestDTO,
+        });
+      } else {
+        await api.post("/product", formattedRequestDTO);
+      }
 
-      // router.refresh();
-      // router.push(`/dashboard/product`);
+      router.refresh();
+      router.push(`/dashboard/product`);
 
-      // toast({
-      //   variant: "default",
-      //   title: "Sucesso!",
-      //   description: toastMessage,
-      // });
+      toast({
+        variant: "default",
+        title: "Sucesso!",
+        description: toastMessage,
+      });
     } finally {
       setLoading(false);
     }

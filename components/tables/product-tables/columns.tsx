@@ -30,7 +30,7 @@ export const columns: ColumnDef<Product>[] = [
   },
   {
     accessorKey: "supplierList",
-    header: "NOME",
+    header: "FORNECEDORES",
     cell: ({ cell, row }) => {
       return <div>{row.original.supplierList.length} Fornecedor(es)</div>;
     },

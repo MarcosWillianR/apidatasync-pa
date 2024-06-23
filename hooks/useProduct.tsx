@@ -8,6 +8,10 @@ interface ArrayObjDTO {
   [key: string]: string;
 }
 
+export interface ProductsResponse {
+  content: Product[];
+}
+
 export interface Product {
   id: number;
   name: string;
@@ -18,33 +22,25 @@ export interface Product {
 }
 
 interface ProductContextProps {
-  products: Product[] | null;
-  getProducts: () => Promise<void>;
+  products: Product[];
   getProduct: (id: number) => Promise<Product | null>;
-  isLoading: boolean;
   deleteProduct: (id: number) => Promise<void>;
+  setInitialProducts: (products: Product[]) => void;
   isDeletingProduct: boolean;
 }
 
 const ProductContext = createContext<ProductContextProps>({} as ProductContextProps);
 
 function ProductProvider({ children }: { children: React.ReactNode }) {
-  const [products, setProducts] = useState<Product[] | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [products, setProducts] = useState<Product[]>([]);
   const [isDeletingProduct, setIsDeletingProduct] = useState(false);
 
   const { toast } = useToast();
   const axiosAuth = useAxiosAuth();
 
-  const getProducts = useCallback(async () => {
-    try {
-      setIsLoading(true);
-      const { data } = await axiosAuth.get("product");
-      setProducts(data.content);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [axiosAuth]);
+  const setInitialProducts = useCallback((initialProducts: Product[]) => {
+    setProducts(initialProducts);
+  }, []);
 
   const getProduct = useCallback(
     async (id: number) => {
@@ -59,11 +55,7 @@ function ProductProvider({ children }: { children: React.ReactNode }) {
       try {
         setIsDeletingProduct(true);
         await axiosAuth.delete(`product/${id}`);
-
-        console.log(id);
-
-        setProducts((currentProducts) => currentProducts?.filter((product) => product.id !== id) || null);
-
+        setProducts((currentProducts) => currentProducts.filter((currentProduct) => currentProduct.id !== id));
         toast({
           title: "Sucesso!",
           description: "Produto removido com sucesso.",
@@ -79,9 +71,8 @@ function ProductProvider({ children }: { children: React.ReactNode }) {
     <ProductContext.Provider
       value={{
         products,
-        getProducts,
+        setInitialProducts,
         getProduct,
-        isLoading,
         deleteProduct,
         isDeletingProduct,
       }}
