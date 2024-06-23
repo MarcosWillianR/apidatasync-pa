@@ -25,10 +25,9 @@ export interface Supplier {
 
 interface SupplierContextProps {
   suppliers: Supplier[];
-  getSuppliers: () => Promise<void>;
   getSupplier: (id: number) => Promise<Supplier | null>;
-  isLoading: boolean;
   deleteSupplier: (id: number) => Promise<void>;
+  setInitialSuppliers: (supplier: Supplier[]) => void;
   isDeletingSupplier: boolean;
 }
 
@@ -36,23 +35,14 @@ const SupplierContext = createContext<SupplierContextProps>({} as SupplierContex
 
 function SupplierProvider({ children }: { children: React.ReactNode }) {
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [isDeletingSupplier, setIsDeletingSupplier] = useState(false);
 
   const { toast } = useToast();
   const axiosAuth = useAxiosAuth();
 
-  const getSuppliers = useCallback(async () => {
-    try {
-      setIsLoading(true);
-
-      const { data } = await axiosAuth.get("supplier");
-
-      setSuppliers(data.content);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [axiosAuth]);
+  const setInitialSuppliers = useCallback((initialSuppliers: Supplier[]) => {
+    setSuppliers(initialSuppliers);
+  }, []);
 
   const getSupplier = useCallback(
     async (id: number) => {
@@ -67,9 +57,7 @@ function SupplierProvider({ children }: { children: React.ReactNode }) {
       try {
         setIsDeletingSupplier(true);
         await axiosAuth.delete(`supplier/${id}`);
-
         setSuppliers((currentSuppliers) => currentSuppliers?.filter((supplier) => supplier.id !== id) || null);
-
         toast({
           title: "Sucesso!",
           description: "Fornecedor removido com sucesso.",
@@ -85,9 +73,8 @@ function SupplierProvider({ children }: { children: React.ReactNode }) {
     <SupplierContext.Provider
       value={{
         suppliers,
-        getSuppliers,
+        setInitialSuppliers,
         getSupplier,
-        isLoading,
         deleteSupplier,
         isDeletingSupplier,
       }}
