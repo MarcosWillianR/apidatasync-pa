@@ -26,6 +26,8 @@ export interface Supplier {
 interface SupplierContextProps {
   suppliers: Supplier[];
   getSupplier: (id: number) => Promise<Supplier | null>;
+  isLoading: boolean;
+  getSuppliers: () => Promise<void>;
   deleteSupplier: (id: number) => Promise<void>;
   setInitialSuppliers: (supplier: Supplier[]) => void;
   isDeletingSupplier: boolean;
@@ -35,6 +37,7 @@ const SupplierContext = createContext<SupplierContextProps>({} as SupplierContex
 
 function SupplierProvider({ children }: { children: React.ReactNode }) {
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
   const [isDeletingSupplier, setIsDeletingSupplier] = useState(false);
 
   const { toast } = useToast();
@@ -43,6 +46,13 @@ function SupplierProvider({ children }: { children: React.ReactNode }) {
   const setInitialSuppliers = useCallback((initialSuppliers: Supplier[]) => {
     setSuppliers(initialSuppliers);
   }, []);
+
+  const getSuppliers = useCallback(async () => {
+    setIsLoading(true);
+    const { data } = await axiosAuth.get("supplier");
+    setSuppliers(data.content);
+    setIsLoading(false);
+  }, [axiosAuth]);
 
   const getSupplier = useCallback(
     async (id: number) => {
@@ -73,6 +83,8 @@ function SupplierProvider({ children }: { children: React.ReactNode }) {
     <SupplierContext.Provider
       value={{
         suppliers,
+        getSuppliers,
+        isLoading,
         setInitialSuppliers,
         getSupplier,
         deleteSupplier,
