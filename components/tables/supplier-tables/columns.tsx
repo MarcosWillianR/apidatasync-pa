@@ -25,6 +25,10 @@ export const columns: ColumnDef<Supplier>[] = [
     enableHiding: false,
   },
   {
+    accessorKey: "id",
+    header: "ID",
+  },
+  {
     accessorKey: "name",
     header: "NOME",
   },
