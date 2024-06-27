@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { columns } from "./columns";
@@ -8,22 +8,16 @@ import { DataTable } from "@/components/ui/data-table";
 import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
 import { Heading } from "@/components/ui/heading";
 import { Separator } from "@/components/ui/separator";
-import { Product, useProduct } from "@/hooks/useProduct";
+import { useProduct } from "@/hooks/useProduct";
 import { Loading } from "@/components/loading";
-interface ProductClientProps {
-  initialProducts: Product[];
-}
 
-export const ProductClient = ({ initialProducts }: ProductClientProps) => {
+export const ProductClient = () => {
   const router = useRouter();
-  const [isLoading, setIsLoading] = useState(true);
-  const { products, setInitialProducts } = useProduct();
+  const { products, pagination, setPagination, isLoading, getProducts, pageCount } = useProduct();
 
   useEffect(() => {
-    setInitialProducts(initialProducts);
-    setIsLoading(false);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    getProducts();
+  }, [getProducts]);
 
   return (
     <>
@@ -36,12 +30,21 @@ export const ProductClient = ({ initialProducts }: ProductClientProps) => {
           <Plus className="mr-2 h-4 w-4" /> Novo Produto
         </Button>
       </div>
+
       <Separator />
 
       {isLoading && <Loading />}
 
       {!isLoading && products.length > 0 && (
-        <DataTable searchKey="name" searchPlaceholder="Buscar por nome..." columns={columns} data={products} />
+        <DataTable
+          searchKey="name"
+          searchPlaceholder="Buscar por nome..."
+          columns={columns}
+          data={products}
+          pageCount={pageCount}
+          pagination={pagination}
+          setPagination={setPagination}
+        />
       )}
 
       {!isLoading && products.length === 0 && (

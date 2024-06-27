@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -8,23 +8,16 @@ import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
 import { Heading } from "@/components/ui/heading";
 import { Separator } from "@/components/ui/separator";
 import { Loading } from "@/components/loading";
-import { Supplier, useSupplier } from "@/hooks/useSupplier";
+import { useSupplier } from "@/hooks/useSupplier";
 import { columns } from "./columns";
 
-interface SupplierClientProps {
-  initialSuppliers: Supplier[];
-}
-
-export const SupplierClient = ({ initialSuppliers }: SupplierClientProps) => {
+export const SupplierClient = () => {
   const router = useRouter();
-  const [isLoading, setIsLoading] = useState(true);
-  const { suppliers, setInitialSuppliers } = useSupplier();
+  const { suppliers, pagination, setPagination, isLoading, getSuppliers, pageCount } = useSupplier();
 
   useEffect(() => {
-    setInitialSuppliers(initialSuppliers);
-    setIsLoading(false);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    getSuppliers();
+  }, [getSuppliers]);
 
   return (
     <>
@@ -42,7 +35,15 @@ export const SupplierClient = ({ initialSuppliers }: SupplierClientProps) => {
       {isLoading && <Loading />}
 
       {!isLoading && suppliers.length > 0 && (
-        <DataTable searchKey="name" searchPlaceholder="Buscar por nome..." columns={columns} data={suppliers} />
+        <DataTable
+          searchKey="name"
+          searchPlaceholder="Buscar por nome..."
+          columns={columns}
+          data={suppliers}
+          pageCount={pageCount}
+          pagination={pagination}
+          setPagination={setPagination}
+        />
       )}
 
       {!isLoading && suppliers.length === 0 && (

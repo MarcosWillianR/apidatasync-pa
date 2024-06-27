@@ -4,7 +4,7 @@ import BreadCrumb from "@/components/breadcrumb";
 import { useParams } from "next/navigation";
 import { ProductForm } from "@/components/forms/product-form";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Product, useProduct } from "@/hooks/useProduct";
+import { ProductDetail, useProduct } from "@/hooks/useProduct";
 import { useSupplier } from "@/hooks/useSupplier";
 import { Loading } from "@/components/loading";
 
@@ -15,7 +15,7 @@ const breadcrumbItems = [
 
 export default function Page() {
   const params = useParams<{ productId: string }>();
-  const [product, setProduct] = useState<Product | null>(null);
+  const [product, setProduct] = useState<ProductDetail | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(!!Number(params.productId));
   const { suppliers, getSuppliers, isLoading: isLoadingSuppliers } = useSupplier();
   const { getProduct } = useProduct();

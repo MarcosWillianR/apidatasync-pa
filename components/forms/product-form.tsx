@@ -12,7 +12,7 @@ import { Separator } from "@/components/ui/separator";
 import { Heading } from "@/components/ui/heading";
 import { useToast } from "../ui/use-toast";
 import api from "@/services/api";
-import { Product } from "@/hooks/useProduct";
+import { ProductDetail } from "@/hooks/useProduct";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "../ui/accordion";
 import { KeyValueItem, SupplierKeyValueList } from "./supplier-key-value-list";
 import { Checkbox } from "../ui/checkbox";
@@ -29,7 +29,7 @@ const formSchema = z.object({
 type ProductFormValues = z.infer<typeof formSchema>;
 
 interface ProductFormProps {
-  initialData: Product | null;
+  initialData: ProductDetail | null;
   suppliers: Supplier[];
 }
 

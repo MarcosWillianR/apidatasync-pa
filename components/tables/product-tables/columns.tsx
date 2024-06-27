@@ -25,14 +25,18 @@ export const columns: ColumnDef<Product>[] = [
     enableHiding: false,
   },
   {
+    accessorKey: "id",
+    header: "ID",
+  },
+  {
     accessorKey: "name",
     header: "NOME",
   },
   {
-    accessorKey: "supplierList",
+    accessorKey: "suppliersCount",
     header: "FORNECEDORES",
     cell: ({ cell, row }) => {
-      return <div>{row.original.supplierList.length} Fornecedor(es)</div>;
+      return <div>{row.original.suppliersCount} Fornecedor(es)</div>;
     },
   },
   {

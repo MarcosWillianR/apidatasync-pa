@@ -1,34 +1,57 @@
 "use client";
 
-import { ColumnDef, flexRender, getCoreRowModel, getFilteredRowModel, useReactTable } from "@tanstack/react-table";
+import {
+  ColumnDef,
+  OnChangeFn,
+  flexRender,
+  getCoreRowModel,
+  getFilteredRowModel,
+  useReactTable,
+} from "@tanstack/react-table";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 import { Input } from "./input";
 import { Button } from "./button";
 import { ScrollArea, ScrollBar } from "./scroll-area";
+import { useEffect } from "react";
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
   searchKey: string;
   searchPlaceholder?: string;
+  pageCount: number | undefined;
+  pagination: { pageIndex: number; pageSize: number };
+  setPagination: OnChangeFn<{ pageIndex: number; pageSize: number }>;
 }
 
 export function DataTable<TData, TValue>({
   columns,
   data,
+  pageCount,
   searchKey,
   searchPlaceholder,
+  pagination,
+  setPagination,
 }: DataTableProps<TData, TValue>) {
   const table = useReactTable({
     data: data,
     columns,
+    pageCount,
     getCoreRowModel: getCoreRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
+    onPaginationChange: setPagination,
+    state: {
+      pagination,
+    },
   });
 
   /* this can be used to get the selectedrows 
   console.log("value", table.getFilteredSelectedRowModel()); */
+
+  useEffect(() => {
+    console.log(pagination);
+  }, [pagination]);
 
   return (
     <>

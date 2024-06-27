@@ -25,34 +25,40 @@ export interface Supplier {
 
 interface SupplierContextProps {
   suppliers: Supplier[];
+  pageCount: number | undefined;
   getSupplier: (id: number) => Promise<Supplier | null>;
   isLoading: boolean;
+  pagination: Pagination;
+  setPagination: React.Dispatch<React.SetStateAction<Pagination>>;
   getSuppliers: () => Promise<void>;
   deleteSupplier: (id: number) => Promise<void>;
-  setInitialSuppliers: (supplier: Supplier[]) => void;
   isDeletingSupplier: boolean;
+}
+
+interface Pagination {
+  pageIndex: number;
+  pageSize: number;
 }
 
 const SupplierContext = createContext<SupplierContextProps>({} as SupplierContextProps);
 
 function SupplierProvider({ children }: { children: React.ReactNode }) {
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [pageCount, setPageCount] = useState<number | undefined>(undefined);
   const [isDeletingSupplier, setIsDeletingSupplier] = useState(false);
+  const [pagination, setPagination] = useState<Pagination>({ pageIndex: 0, pageSize: 10 });
+  const [isLoading, setIsLoading] = useState(false);
 
   const { toast } = useToast();
   const axiosAuth = useAxiosAuth();
 
-  const setInitialSuppliers = useCallback((initialSuppliers: Supplier[]) => {
-    setSuppliers(initialSuppliers);
-  }, []);
-
   const getSuppliers = useCallback(async () => {
     setIsLoading(true);
-    const { data } = await axiosAuth.get("supplier");
+    const { data } = await axiosAuth.get(`supplier?page=${pagination.pageIndex}&size=${pagination.pageSize}`);
     setSuppliers(data.content);
+    setPageCount(data.totalPages);
     setIsLoading(false);
-  }, [axiosAuth]);
+  }, [axiosAuth, pagination.pageIndex, pagination.pageSize, setIsLoading]);
 
   const getSupplier = useCallback(
     async (id: number) => {
@@ -82,13 +88,15 @@ function SupplierProvider({ children }: { children: React.ReactNode }) {
   return (
     <SupplierContext.Provider
       value={{
+        pageCount,
         suppliers,
         getSuppliers,
         isLoading,
-        setInitialSuppliers,
         getSupplier,
         deleteSupplier,
         isDeletingSupplier,
+        pagination,
+        setPagination,
       }}
     >
       {children}
