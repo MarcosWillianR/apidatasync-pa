@@ -17,7 +17,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "..
 import { KeyValueItem, SupplierKeyValueList } from "./supplier-key-value-list";
 import { Checkbox } from "../ui/checkbox";
 import { Label } from "../ui/label";
-import { Supplier } from "@/hooks/useSupplier";
+import { Supplier, useSupplier } from "@/hooks/useSupplier";
 import { convertArrayToJson } from "@/lib/utils";
 
 const formSchema = z.object({
@@ -30,12 +30,12 @@ type ProductFormValues = z.infer<typeof formSchema>;
 
 interface ProductFormProps {
   initialData: ProductDetail | null;
-  suppliers: Supplier[];
 }
 
-export const ProductForm: React.FC<ProductFormProps> = ({ initialData, suppliers }) => {
+export const ProductForm: React.FC<ProductFormProps> = ({ initialData }) => {
   const router = useRouter();
   const { toast } = useToast();
+  const { suppliers, getSuppliers } = useSupplier();
   const [loading, setLoading] = useState(false);
   const [currentAccordionVisible, setCurrentAccordionVisible] = useState("");
   const [selectedSuppliers, setSelectedSuppliers] = useState<number[]>(() => {
@@ -132,12 +132,17 @@ export const ProductForm: React.FC<ProductFormProps> = ({ initialData, suppliers
     if (selectedSuppliers.length > 0) {
       selectedSuppliers.forEach((selectedSupplier) => {
         const findSupplierIndex = suppliers.findIndex((supplier) => supplier.id === selectedSupplier);
-        totalCost += suppliers[findSupplierIndex].costPerRequest;
+        if (findSupplierIndex !== -1) totalCost += suppliers[findSupplierIndex].costPerRequest;
       });
     }
 
     form.setValue("totalCost", totalCost);
   }, [form, selectedSuppliers, suppliers]);
+
+  useEffect(() => {
+    getSuppliers();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <>

@@ -13,27 +13,39 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Input } from "./input";
 import { Button } from "./button";
 import { ScrollArea, ScrollBar } from "./scroll-area";
-import { useEffect } from "react";
+import { ChangeEvent, useRef, useState } from "react";
+import { debounce } from "@/lib/utils";
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
-  searchKey: string;
-  searchPlaceholder?: string;
+  searchPlaceholder: string;
   pageCount: number | undefined;
   pagination: { pageIndex: number; pageSize: number };
   setPagination: OnChangeFn<{ pageIndex: number; pageSize: number }>;
+  filter: string;
+  onChangeFilter: (newFilter: string) => void;
 }
 
 export function DataTable<TData, TValue>({
   columns,
   data,
+  filter,
   pageCount,
-  searchKey,
+  onChangeFilter,
   searchPlaceholder,
   pagination,
   setPagination,
 }: DataTableProps<TData, TValue>) {
+  const [inputValue, setInputValue] = useState(filter);
+  const debouncedOnChangeFilter = useRef(debounce(onChangeFilter, 500));
+
+  const handleInputChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const value = event.target.value;
+    setInputValue(value);
+    debouncedOnChangeFilter.current(value);
+  };
+
   const table = useReactTable({
     data: data,
     columns,
@@ -49,16 +61,12 @@ export function DataTable<TData, TValue>({
   /* this can be used to get the selectedrows 
   console.log("value", table.getFilteredSelectedRowModel()); */
 
-  useEffect(() => {
-    console.log(pagination);
-  }, [pagination]);
-
   return (
     <>
       <Input
-        placeholder={searchPlaceholder || `Search ${searchKey}...`}
-        value={(table.getColumn(searchKey)?.getFilterValue() as string) ?? ""}
-        onChange={(event) => table.getColumn(searchKey)?.setFilterValue(event.target.value)}
+        placeholder={searchPlaceholder}
+        value={inputValue}
+        onChange={handleInputChange}
         className="w-full md:max-w-sm"
       />
       <ScrollArea className="rounded-md border h-[calc(80vh-220px)]">

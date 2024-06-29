@@ -28,7 +28,7 @@ export function SupplierKeyValueList({ list, setList, title, buttonText = "Adici
         key: "",
         value: "",
       };
-      return [newItem, ...currentList];
+      return [...currentList, newItem];
     });
   }
 

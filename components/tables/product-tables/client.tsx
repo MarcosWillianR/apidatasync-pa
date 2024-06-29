@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { columns } from "./columns";
 import { Button } from "@/components/ui/button";
 import { DataTable } from "@/components/ui/data-table";
-import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
 import { Heading } from "@/components/ui/heading";
 import { Separator } from "@/components/ui/separator";
 import { useProduct } from "@/hooks/useProduct";
@@ -13,11 +12,13 @@ import { Loading } from "@/components/loading";
 
 export const ProductClient = () => {
   const router = useRouter();
-  const { products, pagination, setPagination, isLoading, getProducts, pageCount } = useProduct();
+  const { products, pagination, setPagination, isLoading, getProducts, pageCount, filter, onChangeFilter } =
+    useProduct();
 
   useEffect(() => {
     getProducts();
-  }, [getProducts]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <>
@@ -35,28 +36,17 @@ export const ProductClient = () => {
 
       {isLoading && <Loading />}
 
-      {!isLoading && products.length > 0 && (
+      {!isLoading && (
         <DataTable
-          searchKey="name"
-          searchPlaceholder="Buscar por nome..."
+          searchPlaceholder="Buscar por nome ou fornecedor..."
+          filter={filter}
+          onChangeFilter={onChangeFilter}
           columns={columns}
           data={products}
           pageCount={pageCount}
           pagination={pagination}
           setPagination={setPagination}
         />
-      )}
-
-      {!isLoading && products.length === 0 && (
-        <Table className="relative">
-          <TableBody>
-            <TableRow>
-              <TableCell colSpan={columns.length} className="h-24 text-center">
-                Sem produtos cadastrados.
-              </TableCell>
-            </TableRow>
-          </TableBody>
-        </Table>
       )}
     </>
   );

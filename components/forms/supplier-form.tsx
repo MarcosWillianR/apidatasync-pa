@@ -20,7 +20,7 @@ import { Heading } from "@/components/ui/heading";
 import { useToast } from "../ui/use-toast";
 import { Supplier } from "@/hooks/useSupplier";
 import useAxiosAuth from "@/services/hooks/useAxiosAuth";
-import { convertArrayToJson, convertObjectToXML, identifyFormat } from "@/lib/utils";
+import { convertArrayToJson, convertObjectToSOAP, convertObjectToXML, identifyFormat } from "@/lib/utils";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "../ui/accordion";
 
 const formSchema = z.object({
@@ -134,34 +134,42 @@ export const ProductForm: React.FC<ProductFormProps> = ({ initialData }) => {
       } else if (type === "XML") {
         xml2js.parseString(initialData.postBody, (error, result) => {
           if (!error) {
-            const xmlType = Object.keys(result)[0];
+            Object.keys(result.XmlInputConsulta).forEach((key) => {
+              if (key !== "$") {
+                const newItem: KeyValueItem = {
+                  id: uuidv4(),
+                  key,
+                  value: result.XmlInputConsulta[key],
+                };
 
-            switch (xmlType) {
-              case "soap:Envelope": {
-                console.log(result);
-                break;
+                requestBodiesFormatted.push(newItem);
               }
-              case "XmlInputConsulta": {
-                Object.keys(result.XmlInputConsulta).forEach((key) => {
-                  console.log(result);
-                  if (key !== "$") {
-                    const newItem: KeyValueItem = {
-                      id: uuidv4(),
-                      key,
-                      value: result.XmlInputConsulta[key],
-                    };
-
-                    requestBodiesFormatted.push(newItem);
-                  }
-                });
-                break;
-              }
-              default: {
-                console.log("DEFAULT");
-                console.log(result);
-              }
-            }
+            });
           }
+        });
+      } else if (type === "SOAP") {
+        xml2js.parseString(initialData.postBody, (error, result) => {
+          const data = result["soap:Envelope"]["soap:Body"][0];
+
+          Object.keys(data).forEach((dataKey) => {
+            requestBodiesFormatted.push({
+              id: uuidv4(),
+              key: "SOAPRootName",
+              value: dataKey,
+            });
+
+            Object.keys(data[dataKey][0]).forEach((paramKey) => {
+              if (paramKey !== "$") {
+                const newItem: KeyValueItem = {
+                  id: uuidv4(),
+                  key: paramKey,
+                  value: data[dataKey][0][paramKey],
+                };
+
+                requestBodiesFormatted.push(newItem);
+              }
+            });
+          });
         });
       }
 
@@ -170,14 +178,12 @@ export const ProductForm: React.FC<ProductFormProps> = ({ initialData }) => {
 
     return [];
   });
-
   const [currentBodyFormatter, setCurrentBodyFormatter] = useState(() => {
     if (initialData !== null) {
       return identifyFormat(initialData.postBody);
     }
     return "JSON";
   });
-
   const [parameters, setParameters] = useState<Parameter[]>(() => {
     if (initialData !== null) {
       return initialData.parameterType.map((pt) => ({
@@ -218,7 +224,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({ initialData }) => {
   function handleAddNewParameter() {
     setParameters((currentParameters) => {
       const newParameter = { id: uuidv4(), value: "" };
-      return [newParameter, ...currentParameters];
+      return [...currentParameters, newParameter];
     });
   }
 
@@ -248,7 +254,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({ initialData }) => {
         key: "",
         value: "",
       };
-      return [newItem, ...currentList];
+      return [...currentList, newItem];
     });
   }
 
@@ -268,7 +274,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({ initialData }) => {
           const updatedItem = {
             ...currentItem,
             ...(type === "key" && { key: value }),
-            ...(type === "value" && { value }),
+            ...(type === "value" && { value: currentBodyFormatter === "SOAP" ? [value] : value }),
           };
 
           return updatedItem;
@@ -278,21 +284,6 @@ export const ProductForm: React.FC<ProductFormProps> = ({ initialData }) => {
       }),
     );
   }
-
-  // function handleChangeHeaderEnabled(id: string) {
-  //   setHeaders((currentHeaders) =>
-  //     currentHeaders.map((currentHeader) => {
-  //       if (currentHeader.id === id) {
-  //         return {
-  //           ...currentHeader,
-  //           enabled: !currentHeader.enabled,
-  //         };
-  //       }
-
-  //       return currentHeader;
-  //     }),
-  //   );
-  // }
 
   const onSubmit = async (data: ProductFormValues) => {
     try {
@@ -305,14 +296,30 @@ export const ProductForm: React.FC<ProductFormProps> = ({ initialData }) => {
         method: currentMethod,
       };
 
-      const requestBodiesFormatted = convertArrayToJson(requestBodies);
-
       if (currentBodyFormatter === "JSON") {
+        const requestBodiesFormatted = convertArrayToJson(requestBodies);
         formattedRequestData.postBody = JSON.stringify(requestBodiesFormatted);
       }
 
       if (currentBodyFormatter === "XML") {
+        const requestBodiesFormatted = convertArrayToJson(requestBodies);
         formattedRequestData.postBody = convertObjectToXML(requestBodiesFormatted);
+      }
+
+      if (currentBodyFormatter === "SOAP") {
+        const soapRootName = requestBodies.find((item) => item.key === "SOAPRootName")?.value;
+        const requestBodiesFormatted = convertArrayToJson(requestBodies.filter((item) => item.key !== "SOAPRootName"));
+
+        if (soapRootName) {
+          formattedRequestData.postBody = convertObjectToSOAP(soapRootName, requestBodiesFormatted);
+        } else {
+          toast({
+            variant: "destructive",
+            title: "SOAPRootName não encontrado!",
+            description: "Informe o corpo do SOAP na chave 'SOAPRootName'",
+          });
+          return;
+        }
       }
 
       setLoading(true);

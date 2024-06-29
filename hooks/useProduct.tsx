@@ -42,6 +42,8 @@ interface ProductContextProps {
   isDeletingProduct: boolean;
   pagination: Pagination;
   setPagination: React.Dispatch<React.SetStateAction<Pagination>>;
+  filter: string;
+  onChangeFilter: (newFilter: string) => Promise<void>;
   isLoading: boolean;
   getProducts: () => Promise<void>;
 }
@@ -54,17 +56,29 @@ function ProductProvider({ children }: { children: React.ReactNode }) {
   const [isDeletingProduct, setIsDeletingProduct] = useState(false);
   const [pagination, setPagination] = useState<Pagination>({ pageIndex: 0, pageSize: 10 });
   const [isLoading, setIsLoading] = useState(false);
+  const [filter, setFilter] = useState("");
 
   const { toast } = useToast();
   const axiosAuth = useAxiosAuth();
 
-  const getProducts = useCallback(async () => {
-    setIsLoading(true);
-    const { data } = await axiosAuth.get(`product/minimal?page=${pagination.pageIndex}&size=${pagination.pageSize}`);
-    setProducts(data.content);
-    setPageCount(data.totalPages);
-    setIsLoading(false);
-  }, [axiosAuth, pagination.pageIndex, pagination.pageSize]);
+  const getProducts = useCallback(
+    async (newFilter = "") => {
+      setIsLoading(true);
+      setFilter(newFilter);
+      const { data } = await axiosAuth.get(
+        `product/minimal?page=${pagination.pageIndex}&size=${pagination.pageSize}&filter=${newFilter}`,
+      );
+      setProducts(data.content);
+      setPageCount(data.totalPages);
+      setIsLoading(false);
+    },
+    [axiosAuth, pagination.pageIndex, pagination.pageSize],
+  );
+
+  const handleChangeFilter = useCallback(async (newFilter: string) => {
+    await getProducts(newFilter);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const getProduct = useCallback(
     async (id: number) => {
@@ -97,6 +111,8 @@ function ProductProvider({ children }: { children: React.ReactNode }) {
         products,
         pageCount,
         getProducts,
+        filter,
+        onChangeFilter: handleChangeFilter,
         isLoading,
         getProduct,
         deleteProduct,

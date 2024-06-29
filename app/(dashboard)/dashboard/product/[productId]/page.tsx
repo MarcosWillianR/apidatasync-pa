@@ -17,7 +17,6 @@ export default function Page() {
   const params = useParams<{ productId: string }>();
   const [product, setProduct] = useState<ProductDetail | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(!!Number(params.productId));
-  const { suppliers, getSuppliers, isLoading: isLoadingSuppliers } = useSupplier();
   const { getProduct } = useProduct();
 
   useEffect(() => {
@@ -35,16 +34,12 @@ export default function Page() {
     }
   }, [getProduct, params.productId]);
 
-  useEffect(() => {
-    getSuppliers();
-  }, [getSuppliers]);
-
   return (
     <ScrollArea className="h-full">
       <div className="flex-1 space-y-4 p-5">
         <BreadCrumb items={breadcrumbItems} />
 
-        {isLoading || isLoadingSuppliers ? <Loading /> : <ProductForm initialData={product} suppliers={suppliers} />}
+        {isLoading ? <Loading /> : <ProductForm initialData={product} />}
       </div>
     </ScrollArea>
   );

@@ -4,7 +4,6 @@ import { Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { DataTable } from "@/components/ui/data-table";
-import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
 import { Heading } from "@/components/ui/heading";
 import { Separator } from "@/components/ui/separator";
 import { Loading } from "@/components/loading";
@@ -13,11 +12,13 @@ import { columns } from "./columns";
 
 export const SupplierClient = () => {
   const router = useRouter();
-  const { suppliers, pagination, setPagination, isLoading, getSuppliers, pageCount } = useSupplier();
+  const { suppliers, pagination, setPagination, isLoading, getSuppliers, pageCount, filter, onChangeFilter } =
+    useSupplier();
 
   useEffect(() => {
     getSuppliers();
-  }, [getSuppliers]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <>
@@ -34,28 +35,17 @@ export const SupplierClient = () => {
 
       {isLoading && <Loading />}
 
-      {!isLoading && suppliers.length > 0 && (
+      {!isLoading && (
         <DataTable
-          searchKey="name"
-          searchPlaceholder="Buscar por nome..."
+          filter={filter}
+          onChangeFilter={onChangeFilter}
+          searchPlaceholder="Buscar por nome, escopo..."
           columns={columns}
           data={suppliers}
           pageCount={pageCount}
           pagination={pagination}
           setPagination={setPagination}
         />
-      )}
-
-      {!isLoading && suppliers.length === 0 && (
-        <Table className="relative">
-          <TableBody>
-            <TableRow>
-              <TableCell colSpan={columns.length} className="h-24 text-center">
-                Sem fornecedores cadastrados.
-              </TableCell>
-            </TableRow>
-          </TableBody>
-        </Table>
       )}
     </>
   );

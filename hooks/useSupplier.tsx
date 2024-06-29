@@ -30,6 +30,8 @@ interface SupplierContextProps {
   isLoading: boolean;
   pagination: Pagination;
   setPagination: React.Dispatch<React.SetStateAction<Pagination>>;
+  filter: string;
+  onChangeFilter: (newFilter: string) => Promise<void>;
   getSuppliers: () => Promise<void>;
   deleteSupplier: (id: number) => Promise<void>;
   isDeletingSupplier: boolean;
@@ -48,17 +50,29 @@ function SupplierProvider({ children }: { children: React.ReactNode }) {
   const [isDeletingSupplier, setIsDeletingSupplier] = useState(false);
   const [pagination, setPagination] = useState<Pagination>({ pageIndex: 0, pageSize: 10 });
   const [isLoading, setIsLoading] = useState(false);
+  const [filter, setFilter] = useState("");
 
   const { toast } = useToast();
   const axiosAuth = useAxiosAuth();
 
-  const getSuppliers = useCallback(async () => {
-    setIsLoading(true);
-    const { data } = await axiosAuth.get(`supplier?page=${pagination.pageIndex}&size=${pagination.pageSize}`);
-    setSuppliers(data.content);
-    setPageCount(data.totalPages);
-    setIsLoading(false);
-  }, [axiosAuth, pagination.pageIndex, pagination.pageSize, setIsLoading]);
+  const getSuppliers = useCallback(
+    async (newFilter = "") => {
+      setIsLoading(true);
+      setFilter(newFilter);
+      const { data } = await axiosAuth.get(
+        `supplier?page=${pagination.pageIndex}&size=${pagination.pageSize}&filter=${newFilter}`,
+      );
+      setSuppliers(data.content);
+      setPageCount(data.totalPages);
+      setIsLoading(false);
+    },
+    [axiosAuth, pagination.pageIndex, pagination.pageSize],
+  );
+
+  const handleChangeFilter = useCallback(async (newFilter: string) => {
+    await getSuppliers(newFilter);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const getSupplier = useCallback(
     async (id: number) => {
@@ -92,6 +106,8 @@ function SupplierProvider({ children }: { children: React.ReactNode }) {
         suppliers,
         getSuppliers,
         isLoading,
+        filter,
+        onChangeFilter: handleChangeFilter,
         getSupplier,
         deleteSupplier,
         isDeletingSupplier,

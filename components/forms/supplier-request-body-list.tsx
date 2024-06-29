@@ -36,6 +36,7 @@ export function SupplierRequestBodyList({
             <TabsList>
               <TabsTrigger value="JSON">JSON</TabsTrigger>
               <TabsTrigger value="XML">XML</TabsTrigger>
+              <TabsTrigger value="SOAP">SOAP</TabsTrigger>
             </TabsList>
           </Tabs>
         </div>
@@ -52,7 +53,7 @@ export function SupplierRequestBodyList({
           <Input value={value} placeholder="valor" onChange={(e) => onChange("value", e.target.value, id)} />
 
           <div className="flex items-center gap-2">
-            <Button type="button" variant="destructive" onClick={() => onRemove(id)}>
+            <Button disabled={key === "SOAPRootName"} type="button" variant="destructive" onClick={() => onRemove(id)}>
               <Trash className="h-4 w-4" />
             </Button>
           </div>
