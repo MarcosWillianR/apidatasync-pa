@@ -45,12 +45,14 @@ export function convertObjectToXML(obj: ArrayObject) {
 }
 
 export function convertObjectToSOAP(rootName: string | string[], obj: ArrayObject) {
+  const rootNameString = rootName as string;
+  
   const builder = new Builder({
     xmldec: {
       version: "1.0",
       encoding: "UTF-8",
     },
-    rootName,
+    rootName: rootNameString,
     headless: false,
     renderOpts: { pretty: false },
   });
