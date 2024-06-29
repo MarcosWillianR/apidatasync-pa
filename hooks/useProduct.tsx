@@ -20,6 +20,20 @@ export interface Product {
   totalCost: number;
 }
 
+export interface ProductDocumentationParam {
+  id: number | string;
+  name: string;
+  description: string;
+  type: string;
+}
+
+interface ProductDocumentation {
+  title: string;
+  description: string;
+  curl: string;
+  params: ProductDocumentationParam[];
+}
+
 export interface ProductDetail {
   id: number;
   name: string;
@@ -27,6 +41,7 @@ export interface ProductDetail {
   supplierList: Supplier[];
   totalPrice: number;
   totalCost: number;
+  doc: ProductDocumentation;
 }
 
 interface Pagination {

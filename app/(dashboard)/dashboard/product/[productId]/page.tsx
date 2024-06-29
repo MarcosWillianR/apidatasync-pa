@@ -5,7 +5,6 @@ import { useParams } from "next/navigation";
 import { ProductForm } from "@/components/forms/product-form";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ProductDetail, useProduct } from "@/hooks/useProduct";
-import { useSupplier } from "@/hooks/useSupplier";
 import { Loading } from "@/components/loading";
 
 const breadcrumbItems = [

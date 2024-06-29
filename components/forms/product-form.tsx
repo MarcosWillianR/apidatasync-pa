@@ -12,16 +12,21 @@ import { Separator } from "@/components/ui/separator";
 import { Heading } from "@/components/ui/heading";
 import { useToast } from "../ui/use-toast";
 import api from "@/services/api";
-import { ProductDetail } from "@/hooks/useProduct";
+import { ProductDetail, ProductDocumentationParam } from "@/hooks/useProduct";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "../ui/accordion";
 import { KeyValueItem, SupplierKeyValueList } from "./supplier-key-value-list";
 import { Checkbox } from "../ui/checkbox";
 import { Label } from "../ui/label";
-import { Supplier, useSupplier } from "@/hooks/useSupplier";
+import { useSupplier } from "@/hooks/useSupplier";
 import { convertArrayToJson } from "@/lib/utils";
+import { Textarea } from "../ui/textarea";
+import { ProductDocParamList } from "./product-doc-param-list";
 
 const formSchema = z.object({
   name: z.string().min(3, { message: "O nome é muito curto, insira no mínimo 5 caracteres" }),
+  docTitle: z.string(),
+  docDescription: z.string(),
+  docCurl: z.string(),
   totalPrice: z.coerce.number(),
   totalCost: z.coerce.number(),
 });
@@ -63,6 +68,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({ initialData }) => {
 
     return [];
   });
+  const [docParams, setDocParams] = useState<ProductDocumentationParam[]>([]);
 
   const title = initialData ? "Editar produto" : "Criar produto";
   const description = initialData ? "Editar um produto." : "Criar um novo produto";
@@ -70,9 +76,18 @@ export const ProductForm: React.FC<ProductFormProps> = ({ initialData }) => {
   const action = initialData ? "Salvar alterações" : "Criar";
 
   const defaultValues = initialData
-    ? initialData
+    ? {
+        ...initialData,
+        docTitle: initialData?.doc?.title,
+        docDescription: initialData?.doc?.description,
+        docCurl: initialData?.doc?.curl,
+      }
     : {
         name: "",
+        title: "",
+        docTitle: "",
+        docDescription: "",
+        docCurl: "",
         totalPrice: 0,
         totalCost: 0,
       };
@@ -89,6 +104,36 @@ export const ProductForm: React.FC<ProductFormProps> = ({ initialData }) => {
     });
   }
 
+  function handleAddNewDocParam() {
+    setDocParams((currentDocParams) => {
+      const newDocParam = {
+        id: uuidv4(),
+        name: "",
+        description: "",
+        type: "",
+      };
+      return [...currentDocParams, newDocParam];
+    });
+  }
+
+  function handleChangeDocParam(changeType: string, value: string, id: number | string) {
+    setDocParams((currentDocParams) =>
+      currentDocParams.map((docParam) => {
+        if (docParam.id === id) {
+          return {
+            ...docParam,
+            [changeType]: value,
+          };
+        }
+        return docParam;
+      }),
+    );
+  }
+
+  function handleRemoveDocParam(id: number | string) {
+    setDocParams((currentDocParams) => currentDocParams.filter((docParam) => docParam.id !== id));
+  }
+
   const form = useForm<ProductFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues,
@@ -98,10 +143,22 @@ export const ProductForm: React.FC<ProductFormProps> = ({ initialData }) => {
     try {
       setLoading(true);
 
+      const formattedDocDTO = {
+        title: data.docTitle,
+        description: data.docDescription,
+        curl: data.docCurl,
+        params: docParams.map(({ id, name, description, type }) => {
+          if (typeof id === "string") return { name, description, type };
+          return { id, name, description, type };
+        }),
+      };
+
       const formattedRequestDTO = {
-        ...data,
+        name: data.name,
+        totalPrice: data.totalPrice,
         supplierIds: selectedSuppliers,
         standardResponse: standardResponses.length > 0 ? convertArrayToJson(standardResponses) : null,
+        doc: formattedDocDTO,
       };
 
       if (initialData) {
@@ -233,6 +290,74 @@ export const ProductForm: React.FC<ProductFormProps> = ({ initialData }) => {
                 </AccordionContent>
               </AccordionItem>
             )}
+
+            <AccordionItem value="doc">
+              <AccordionTrigger>Adicionar Documentação</AccordionTrigger>
+              <AccordionContent>
+                <div className="flex flex-col gap-3">
+                  <FormField
+                    control={form.control}
+                    name="docTitle"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Titulo</FormLabel>
+                        <FormControl>
+                          <Input
+                            disabled={loading}
+                            placeholder="Titulo que vai na documentação desse produto"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="docDescription"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Descrição</FormLabel>
+                        <FormControl>
+                          <Textarea
+                            disabled={loading}
+                            placeholder="Descrição que vai na documentação desse produto"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="docCurl"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>CURL</FormLabel>
+                        <FormControl>
+                          <Input
+                            disabled={loading}
+                            placeholder="CURL que vai na documentação desse produto"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <ProductDocParamList
+                    docParams={docParams}
+                    onAddNew={handleAddNewDocParam}
+                    onChange={handleChangeDocParam}
+                    onRemove={handleRemoveDocParam}
+                  />
+                </div>
+              </AccordionContent>
+            </AccordionItem>
           </Accordion>
 
           <Button isLoading={loading} className="ml-auto" type="submit">

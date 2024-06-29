@@ -289,7 +289,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({ initialData }) => {
     try {
       const formattedRequestData: RequestDataDTO = {
         ...data,
-        parameters: parameters.map((p) => p.value).filter((p) => p),
+        parameters: parameters.map((p) => p.value).filter((p) => p.toUpperCase()),
         postHeader: headers.length > 0 ? convertArrayToJson(headers) : null,
         standardResponse: standardResponses.length > 0 ? convertArrayToJson(standardResponses) : null,
         postBody: "",
@@ -307,7 +307,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({ initialData }) => {
       }
 
       if (currentBodyFormatter === "SOAP") {
-        const soapRootName = requestBodies.find((item) => item.key === "SOAPRootName")?.value;
+        const soapRootName = requestBodies.find((item) => item.key === "SOAPRootName")?.value as string | undefined;
         const requestBodiesFormatted = convertArrayToJson(requestBodies.filter((item) => item.key !== "SOAPRootName"));
 
         if (soapRootName) {

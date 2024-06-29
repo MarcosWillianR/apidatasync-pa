@@ -44,15 +44,13 @@ export function convertObjectToXML(obj: ArrayObject) {
   return xmlWithNamespaces;
 }
 
-export function convertObjectToSOAP(rootName: string | string[], obj: ArrayObject) {
-  const rootNameString = rootName as string;
-  
+export function convertObjectToSOAP(rootName: string, obj: ArrayObject) {
   const builder = new Builder({
     xmldec: {
       version: "1.0",
       encoding: "UTF-8",
     },
-    rootName: rootNameString,
+    rootName,
     headless: false,
     renderOpts: { pretty: false },
   });
