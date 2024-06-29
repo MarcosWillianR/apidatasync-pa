@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 export interface RequestBodyItem {
   id: string;
   key: string;
-  value: string;
+  value: string | string[];
 }
 
 interface SupplierRequestBodyListProps {

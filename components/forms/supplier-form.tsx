@@ -42,7 +42,7 @@ interface ProductFormProps {
 }
 
 interface ArrayObjDTO {
-  [key: string]: string;
+  [key: string]: string | string[];
 }
 
 interface RequestDataDTO {
