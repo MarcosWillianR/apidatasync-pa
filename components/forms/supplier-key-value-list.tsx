@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 export interface KeyValueItem {
   id: string;
   key: string;
-  value: string;
+  value: string | string[];
   // enabled: boolean;
 }
 

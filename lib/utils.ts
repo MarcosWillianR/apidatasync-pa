@@ -7,12 +7,12 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 interface ArrayObject {
-  [key: string]: string;
+  [key: string]: string  | string[];
 }
 
 interface ArrayItem {
   key: string;
-  value: string;
+  value: string | string[];
 }
 
 export function convertArrayToJson(array: ArrayItem[]) {
@@ -44,7 +44,7 @@ export function convertObjectToXML(obj: ArrayObject) {
   return xmlWithNamespaces;
 }
 
-export function convertObjectToSOAP(rootName: string, obj: ArrayObject) {
+export function convertObjectToSOAP(rootName: string | string[], obj: ArrayObject) {
   const builder = new Builder({
     xmldec: {
       version: "1.0",
