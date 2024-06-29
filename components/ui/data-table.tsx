@@ -13,8 +13,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Input } from "./input";
 import { Button } from "./button";
 import { ScrollArea, ScrollBar } from "./scroll-area";
-import { ChangeEvent, useRef, useState } from "react";
-import { debounce } from "@/lib/utils";
+import { ChangeEvent, useState } from "react";
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -38,12 +37,15 @@ export function DataTable<TData, TValue>({
   setPagination,
 }: DataTableProps<TData, TValue>) {
   const [inputValue, setInputValue] = useState(filter);
-  const debouncedOnChangeFilter = useRef(debounce(onChangeFilter, 500));
 
   const handleInputChange = (event: ChangeEvent<HTMLInputElement>) => {
-    const value = event.target.value;
-    setInputValue(value);
-    debouncedOnChangeFilter.current(value);
+    setInputValue(event.target.value);
+  };
+
+  const handleKeyDown = (event: any) => {
+    if (event.key === "Enter") {
+      onChangeFilter(inputValue);
+    }
   };
 
   const table = useReactTable({
@@ -67,6 +69,7 @@ export function DataTable<TData, TValue>({
         placeholder={searchPlaceholder}
         value={inputValue}
         onChange={handleInputChange}
+        onKeyDown={handleKeyDown}
         className="w-full md:max-w-sm"
       />
       <ScrollArea className="rounded-md border h-[calc(80vh-220px)]">
