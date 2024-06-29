@@ -1,4 +1,4 @@
-import React, { useCallback, useState, createContext, useContext } from "react";
+import React, { useCallback, useState, createContext, useContext, useEffect } from "react";
 
 import useAxiosAuth from "@/services/hooks/useAxiosAuth";
 import { useToast } from "@/components/ui/use-toast";
@@ -56,18 +56,22 @@ function SupplierProvider({ children }: { children: React.ReactNode }) {
   const axiosAuth = useAxiosAuth();
 
   const getSuppliers = useCallback(
-    async (newFilter = "") => {
+    async (newFilter = "", page?: Pagination) => {
       setIsLoading(true);
       setFilter(newFilter);
       const { data } = await axiosAuth.get(
-        `supplier?page=${pagination.pageIndex}&size=${pagination.pageSize}&filter=${newFilter}`,
+        `supplier?page=${page?.pageIndex || 0}&size=${page?.pageSize || 10}&filter=${newFilter}`,
       );
       setSuppliers(data.content);
       setPageCount(data.totalPages);
       setIsLoading(false);
     },
-    [axiosAuth, pagination.pageIndex, pagination.pageSize],
+    [axiosAuth],
   );
+
+  useEffect(() => {
+    getSuppliers("", pagination);
+  }, [getSuppliers, pagination]);
 
   const handleChangeFilter = useCallback(async (newFilter: string) => {
     await getSuppliers(newFilter);

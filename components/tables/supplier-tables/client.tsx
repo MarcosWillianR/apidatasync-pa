@@ -1,5 +1,4 @@
 "use client";
-import { useEffect } from "react";
 import { Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -12,13 +11,7 @@ import { columns } from "./columns";
 
 export const SupplierClient = () => {
   const router = useRouter();
-  const { suppliers, pagination, setPagination, isLoading, getSuppliers, pageCount, filter, onChangeFilter } =
-    useSupplier();
-
-  useEffect(() => {
-    getSuppliers();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  const { suppliers, pagination, setPagination, isLoading, pageCount, filter, onChangeFilter } = useSupplier();
 
   return (
     <>

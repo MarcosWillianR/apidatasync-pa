@@ -12,13 +12,7 @@ import { Loading } from "@/components/loading";
 
 export const ProductClient = () => {
   const router = useRouter();
-  const { products, pagination, setPagination, isLoading, getProducts, pageCount, filter, onChangeFilter } =
-    useProduct();
-
-  useEffect(() => {
-    getProducts();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  const { products, pagination, setPagination, isLoading, pageCount, filter, onChangeFilter } = useProduct();
 
   return (
     <>

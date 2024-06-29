@@ -1,4 +1,4 @@
-import React, { useCallback, useState, createContext, useContext } from "react";
+import React, { useCallback, useState, createContext, useContext, useEffect } from "react";
 
 import useAxiosAuth from "@/services/hooks/useAxiosAuth";
 import { useToast } from "@/components/ui/use-toast";
@@ -77,18 +77,22 @@ function ProductProvider({ children }: { children: React.ReactNode }) {
   const axiosAuth = useAxiosAuth();
 
   const getProducts = useCallback(
-    async (newFilter = "") => {
+    async (newFilter = "", page?: Pagination) => {
       setIsLoading(true);
       setFilter(newFilter);
       const { data } = await axiosAuth.get(
-        `product/minimal?page=${pagination.pageIndex}&size=${pagination.pageSize}&filter=${newFilter}`,
+        `product/minimal?page=${page?.pageIndex || 0}&size=${page?.pageSize || 10}&filter=${newFilter}`,
       );
       setProducts(data.content);
       setPageCount(data.totalPages);
       setIsLoading(false);
     },
-    [axiosAuth, pagination.pageIndex, pagination.pageSize],
+    [axiosAuth],
   );
+
+  useEffect(() => {
+    getProducts("", pagination);
+  }, [getProducts, pagination]);
 
   const handleChangeFilter = useCallback(async (newFilter: string) => {
     await getProducts(newFilter);
