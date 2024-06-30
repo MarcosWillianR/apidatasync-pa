@@ -6,6 +6,7 @@ import { ProductForm } from "@/components/forms/product-form";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ProductDetail, useProduct } from "@/hooks/useProduct";
 import { Loading } from "@/components/loading";
+import { SupplierProvider } from "@/hooks/useSupplier";
 
 const breadcrumbItems = [
   { title: "Produtos", link: "/dashboard/product" },
@@ -34,12 +35,14 @@ export default function Page() {
   }, [getProduct, params.productId]);
 
   return (
-    <ScrollArea className="h-full">
-      <div className="flex-1 space-y-4 p-5">
-        <BreadCrumb items={breadcrumbItems} />
+    <>
+      <ScrollArea className="h-full">
+        <div className="flex-1 space-y-4 p-5">
+          <BreadCrumb items={breadcrumbItems} />
 
-        {isLoading ? <Loading /> : <ProductForm initialData={product} />}
-      </div>
-    </ScrollArea>
+          {isLoading ? <Loading /> : <ProductForm initialData={product} />}
+        </div>
+      </ScrollArea>
+    </>
   );
 }

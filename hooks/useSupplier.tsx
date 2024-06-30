@@ -1,10 +1,17 @@
-import React, { useCallback, useState, createContext, useContext, useEffect } from "react";
+import React, { useCallback, useState, createContext, useContext } from "react";
 
 import useAxiosAuth from "@/services/hooks/useAxiosAuth";
 import { useToast } from "@/components/ui/use-toast";
+import { AxiosInstance } from "axios";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 
 interface ArrayObjDTO {
   [key: string]: string;
+}
+
+export interface SupplierResponse {
+  content: Supplier[];
+  totalPages: number;
 }
 
 export interface Supplier {
@@ -31,8 +38,7 @@ interface SupplierContextProps {
   pagination: Pagination;
   setPagination: React.Dispatch<React.SetStateAction<Pagination>>;
   filter: string;
-  onChangeFilter: (newFilter: string) => Promise<void>;
-  getSuppliers: () => Promise<void>;
+  onChangeFilter: (newFilter: string) => void;
   deleteSupplier: (id: number) => Promise<void>;
   isDeletingSupplier: boolean;
 }
@@ -44,39 +50,34 @@ interface Pagination {
 
 const SupplierContext = createContext<SupplierContextProps>({} as SupplierContextProps);
 
-function SupplierProvider({ children }: { children: React.ReactNode }) {
-  const [suppliers, setSuppliers] = useState<Supplier[]>([]);
-  const [pageCount, setPageCount] = useState<number | undefined>(undefined);
-  const [isDeletingSupplier, setIsDeletingSupplier] = useState(false);
-  const [pagination, setPagination] = useState<Pagination>({ pageIndex: 0, pageSize: 10 });
-  const [isLoading, setIsLoading] = useState(false);
-  const [filter, setFilter] = useState("");
+const fetchSuppliers = async (
+  pagination: Pagination,
+  filter: string,
+  api: AxiosInstance,
+): Promise<SupplierResponse> => {
+  const { pageIndex, pageSize } = pagination;
+  const response = await api.get(`supplier?page=${pageIndex}&size=${pageSize}&filter=${filter}`);
+  return response.data;
+};
 
+function SupplierProvider({ children }: { children: React.ReactNode }) {
+  const [pagination, setPagination] = useState<Pagination>({ pageIndex: 0, pageSize: 10 });
+  const [filter, setFilter] = useState<string>("");
   const { toast } = useToast();
   const axiosAuth = useAxiosAuth();
 
-  const getSuppliers = useCallback(
-    async (newFilter = "", page?: Pagination) => {
-      setIsLoading(true);
-      setFilter(newFilter);
-      const { data } = await axiosAuth.get(
-        `supplier?page=${page?.pageIndex || 0}&size=${page?.pageSize || 10}&filter=${newFilter}`,
-      );
-      setSuppliers(data.content);
-      setPageCount(data.totalPages);
-      setIsLoading(false);
-    },
-    [axiosAuth],
-  );
+  const [isDeletingSupplier, setIsDeletingSupplier] = useState(false);
 
-  useEffect(() => {
-    getSuppliers("", pagination);
-  }, [getSuppliers, pagination]);
+  const { data, isLoading, refetch } = useQuery({
+    queryKey: ["suppliers", pagination, filter],
+    queryFn: () => fetchSuppliers(pagination, filter, axiosAuth),
+    placeholderData: keepPreviousData,
+  });
 
-  const handleChangeFilter = useCallback(async (newFilter: string) => {
-    await getSuppliers(newFilter);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  const suppliers = data?.content ?? [];
+  const pageCount = data?.totalPages ?? 0;
+
+  const onChangeFilter = useCallback((newFilter: string) => setFilter(newFilter), []);
 
   const getSupplier = useCallback(
     async (id: number) => {
@@ -91,7 +92,7 @@ function SupplierProvider({ children }: { children: React.ReactNode }) {
       try {
         setIsDeletingSupplier(true);
         await axiosAuth.delete(`supplier/${id}`);
-        setSuppliers((currentSuppliers) => currentSuppliers?.filter((supplier) => supplier.id !== id) || null);
+        await refetch();
         toast({
           title: "Sucesso!",
           description: "Fornecedor removido com sucesso.",
@@ -100,7 +101,7 @@ function SupplierProvider({ children }: { children: React.ReactNode }) {
         setIsDeletingSupplier(false);
       }
     },
-    [axiosAuth, toast],
+    [axiosAuth, refetch, toast],
   );
 
   return (
@@ -108,10 +109,9 @@ function SupplierProvider({ children }: { children: React.ReactNode }) {
       value={{
         pageCount,
         suppliers,
-        getSuppliers,
         isLoading,
         filter,
-        onChangeFilter: handleChangeFilter,
+        onChangeFilter,
         getSupplier,
         deleteSupplier,
         isDeletingSupplier,

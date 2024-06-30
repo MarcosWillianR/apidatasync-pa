@@ -2,8 +2,10 @@
 import React from "react";
 import ThemeProvider from "./ThemeToggle/theme-provider";
 import { SessionProvider, SessionProviderProps } from "next-auth/react";
-import { SupplierProvider } from "@/hooks/useSupplier";
-import { ProductProvider } from "@/hooks/useProduct";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+
+const queryClient = new QueryClient();
+
 export default function Providers({
   session,
   children,
@@ -14,9 +16,7 @@ export default function Providers({
   return (
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
       <SessionProvider session={session}>
-        <SupplierProvider>
-          <ProductProvider>{children}</ProductProvider>
-        </SupplierProvider>
+        <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
       </SessionProvider>
     </ThemeProvider>
   );

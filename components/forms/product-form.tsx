@@ -24,9 +24,9 @@ import { ProductDocParamList } from "./product-doc-param-list";
 
 const formSchema = z.object({
   name: z.string().min(3, { message: "O nome é muito curto, insira no mínimo 5 caracteres" }),
-  docTitle: z.string(),
-  docDescription: z.string(),
-  docCurl: z.string(),
+  docTitle: z.string().optional(),
+  docDescription: z.string().optional(),
+  docCurl: z.string().optional(),
   totalPrice: z.coerce.number(),
   totalCost: z.coerce.number(),
 });
@@ -40,7 +40,7 @@ interface ProductFormProps {
 export const ProductForm: React.FC<ProductFormProps> = ({ initialData }) => {
   const router = useRouter();
   const { toast } = useToast();
-  const { suppliers, getSuppliers } = useSupplier();
+  const { suppliers } = useSupplier();
   const [loading, setLoading] = useState(false);
   const [currentAccordionVisible, setCurrentAccordionVisible] = useState("");
   const [selectedSuppliers, setSelectedSuppliers] = useState<number[]>(() => {
@@ -78,9 +78,9 @@ export const ProductForm: React.FC<ProductFormProps> = ({ initialData }) => {
   const defaultValues = initialData
     ? {
         ...initialData,
-        docTitle: initialData?.doc?.title,
-        docDescription: initialData?.doc?.description,
-        docCurl: initialData?.doc?.curl,
+        docTitle: initialData?.doc?.title || "",
+        docDescription: initialData?.doc?.description || "",
+        docCurl: initialData?.doc?.curl || "",
       }
     : {
         name: "",
@@ -144,9 +144,9 @@ export const ProductForm: React.FC<ProductFormProps> = ({ initialData }) => {
       setLoading(true);
 
       const formattedDocDTO = {
-        title: data.docTitle,
-        description: data.docDescription,
-        curl: data.docCurl,
+        title: data.docTitle || "",
+        description: data.docDescription || "",
+        curl: data.docCurl || "",
         params: docParams.map(({ id, name, description, type }) => {
           if (typeof id === "string") return { name, description, type };
           return { id, name, description, type };
@@ -195,11 +195,6 @@ export const ProductForm: React.FC<ProductFormProps> = ({ initialData }) => {
 
     form.setValue("totalCost", totalCost);
   }, [form, selectedSuppliers, suppliers]);
-
-  useEffect(() => {
-    getSuppliers();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   return (
     <>

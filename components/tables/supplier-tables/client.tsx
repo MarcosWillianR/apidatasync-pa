@@ -28,18 +28,16 @@ export const SupplierClient = () => {
 
       {isLoading && <Loading />}
 
-      {!isLoading && (
-        <DataTable
-          filter={filter}
-          onChangeFilter={onChangeFilter}
-          searchPlaceholder="Buscar por nome, escopo..."
-          columns={columns}
-          data={suppliers}
-          pageCount={pageCount}
-          pagination={pagination}
-          setPagination={setPagination}
-        />
-      )}
+      <DataTable
+        searchPlaceholder="Buscar por nome, escopo..."
+        filter={filter}
+        onChangeFilter={onChangeFilter}
+        columns={columns}
+        data={suppliers}
+        pageCount={pageCount}
+        pagination={pagination}
+        setPagination={setPagination}
+      />
     </>
   );
 };

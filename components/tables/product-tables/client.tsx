@@ -1,5 +1,4 @@
 "use client";
-import { useEffect } from "react";
 import { Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { columns } from "./columns";
@@ -30,18 +29,16 @@ export const ProductClient = () => {
 
       {isLoading && <Loading />}
 
-      {!isLoading && (
-        <DataTable
-          searchPlaceholder="Buscar por nome ou fornecedor..."
-          filter={filter}
-          onChangeFilter={onChangeFilter}
-          columns={columns}
-          data={products}
-          pageCount={pageCount}
-          pagination={pagination}
-          setPagination={setPagination}
-        />
-      )}
+      <DataTable
+        searchPlaceholder="Buscar por nome ou fornecedor..."
+        filter={filter}
+        onChangeFilter={onChangeFilter}
+        columns={columns}
+        data={products}
+        pageCount={pageCount}
+        pagination={pagination}
+        setPagination={setPagination}
+      />
     </>
   );
 };

@@ -1,23 +1,24 @@
+"use client";
 import Header from "@/components/layout/header";
 import Sidebar from "@/components/layout/sidebar";
-import type { Metadata } from "next";
+import { ProductProvider } from "@/hooks/useProduct";
+import { SupplierProvider } from "@/hooks/useSupplier";
+// import type { Metadata } from "next";
 
-export const metadata: Metadata = {
-  title: "ApiDataSync - Dashboard",
-};
+// export const metadata: Metadata = {
+//   title: "ApiDataSync - Dashboard",
+// };
 
-export default function DashboardLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
-    <>
-      <Header />
-      <div className="flex h-screen overflow-hidden">
-        <Sidebar />
-        <main className="w-full pt-16">{children}</main>
-      </div>
-    </>
+    <SupplierProvider>
+      <ProductProvider>
+        <Header />
+        <div className="flex h-screen overflow-hidden">
+          <Sidebar />
+          <main className="w-full pt-16">{children}</main>
+        </div>
+      </ProductProvider>
+    </SupplierProvider>
   );
 }

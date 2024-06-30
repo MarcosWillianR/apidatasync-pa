@@ -1,8 +1,9 @@
-import React, { useCallback, useState, createContext, useContext, useEffect } from "react";
-
-import useAxiosAuth from "@/services/hooks/useAxiosAuth";
+import React, { useCallback, useState, createContext, useContext } from "react";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { useToast } from "@/components/ui/use-toast";
 import { Supplier } from "./useSupplier";
+import useAxiosAuth from "@/services/hooks/useAxiosAuth";
+import { AxiosInstance } from "axios";
 
 interface ArrayObjDTO {
   [key: string]: string;
@@ -10,6 +11,7 @@ interface ArrayObjDTO {
 
 export interface ProductsResponse {
   content: Product[];
+  totalPages: number;
 }
 
 export interface Product {
@@ -58,46 +60,36 @@ interface ProductContextProps {
   pagination: Pagination;
   setPagination: React.Dispatch<React.SetStateAction<Pagination>>;
   filter: string;
-  onChangeFilter: (newFilter: string) => Promise<void>;
+  onChangeFilter: (newFilter: string) => void;
   isLoading: boolean;
-  getProducts: () => Promise<void>;
 }
 
 const ProductContext = createContext<ProductContextProps>({} as ProductContextProps);
 
-function ProductProvider({ children }: { children: React.ReactNode }) {
-  const [products, setProducts] = useState<Product[]>([]);
-  const [pageCount, setPageCount] = useState<number | undefined>(undefined);
-  const [isDeletingProduct, setIsDeletingProduct] = useState(false);
-  const [pagination, setPagination] = useState<Pagination>({ pageIndex: 0, pageSize: 10 });
-  const [isLoading, setIsLoading] = useState(false);
-  const [filter, setFilter] = useState("");
+const fetchProducts = async (pagination: Pagination, filter: string, api: AxiosInstance): Promise<ProductsResponse> => {
+  const { pageIndex, pageSize } = pagination;
+  const response = await api.get(`product/minimal?page=${pageIndex}&size=${pageSize}&filter=${filter}`);
+  return response.data;
+};
 
+function ProductProvider({ children }: { children: React.ReactNode }) {
+  const [pagination, setPagination] = useState<Pagination>({ pageIndex: 0, pageSize: 10 });
+  const [filter, setFilter] = useState<string>("");
   const { toast } = useToast();
   const axiosAuth = useAxiosAuth();
 
-  const getProducts = useCallback(
-    async (newFilter = "", page?: Pagination) => {
-      setIsLoading(true);
-      setFilter(newFilter);
-      const { data } = await axiosAuth.get(
-        `product/minimal?page=${page?.pageIndex || 0}&size=${page?.pageSize || 10}&filter=${newFilter}`,
-      );
-      setProducts(data.content);
-      setPageCount(data.totalPages);
-      setIsLoading(false);
-    },
-    [axiosAuth],
-  );
+  const [isDeletingProduct, setIsDeletingProduct] = useState(false);
 
-  useEffect(() => {
-    getProducts("", pagination);
-  }, [getProducts, pagination]);
+  const { data, isLoading, refetch } = useQuery({
+    queryKey: ["products", pagination, filter],
+    queryFn: () => fetchProducts(pagination, filter, axiosAuth),
+    placeholderData: keepPreviousData,
+  });
 
-  const handleChangeFilter = useCallback(async (newFilter: string) => {
-    await getProducts(newFilter);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  const products = data?.content ?? [];
+  const pageCount = data?.totalPages ?? 0;
+
+  const onChangeFilter = useCallback((newFilter: string) => setFilter(newFilter), []);
 
   const getProduct = useCallback(
     async (id: number) => {
@@ -112,7 +104,7 @@ function ProductProvider({ children }: { children: React.ReactNode }) {
       try {
         setIsDeletingProduct(true);
         await axiosAuth.delete(`product/${id}`);
-        setProducts((currentProducts) => currentProducts.filter((currentProduct) => currentProduct.id !== id));
+        await refetch();
         toast({
           title: "Sucesso!",
           description: "Produto removido com sucesso.",
@@ -121,7 +113,7 @@ function ProductProvider({ children }: { children: React.ReactNode }) {
         setIsDeletingProduct(false);
       }
     },
-    [axiosAuth, toast],
+    [axiosAuth, refetch, toast],
   );
 
   return (
@@ -129,15 +121,14 @@ function ProductProvider({ children }: { children: React.ReactNode }) {
       value={{
         products,
         pageCount,
-        getProducts,
+        pagination,
+        setPagination,
         filter,
-        onChangeFilter: handleChangeFilter,
+        onChangeFilter,
         isLoading,
         getProduct,
         deleteProduct,
         isDeletingProduct,
-        pagination,
-        setPagination,
       }}
     >
       {children}
